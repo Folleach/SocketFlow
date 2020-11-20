@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SocketFlow.Client\SocketFlow.Client.csproj" />
+    <ProjectReference Include="..\SocketFlow.Server\SocketFlow.Server.csproj" />
+  </ItemGroup>
+
+</Project>
