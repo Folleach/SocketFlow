@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using SocketFlow.DataWrappers;
+using SocketFlow.Server.Modules;
 
 namespace SocketFlow.Server
 {
@@ -11,6 +12,7 @@ namespace SocketFlow.Server
         public readonly IDataWrapper<T> DataWrapper;
         private readonly TcpListener listener;
         private readonly Dictionary<int, Action<DestinationClient<T>, T>> handlers;
+        private readonly LinkedList<IModule> Modules = new LinkedList<IModule>();
         private bool working = false;
 
         public SocketFlowServer(IPAddress address, int port, IDataWrapper<T> dataWrapper)
@@ -28,17 +30,26 @@ namespace SocketFlow.Server
             handlers.Add(type, handler);
         }
 
-        public void Start(int backlog)
+        public SocketFlowServer<T> Using(IModule module)
+        {
+            module.Initialize(this);
+            Modules.AddLast(module);
+            return this;
+        }
+
+        public SocketFlowServer<T> Start(int backlog)
         {
             listener.Start(backlog);
             working = true;
             AcceptHandler();
+            return this;
         }
 
-        public void Stop()
+        public SocketFlowServer<T> Stop()
         {
             working = false;
             listener.Stop();
+            return this;
         }
 
         internal void DisconnectMe(DestinationClient<T> client)
