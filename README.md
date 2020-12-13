@@ -3,11 +3,11 @@ An event-oriented protocol over tcp
 _Light_ and _simple_ for use
 
 #### Supported languages
-* C#
-
-Also planned to write for:
-* Js
-* Java
+|      | client | server |
+|:-----|:------:|:------:|
+| C#   | +      | +      |
+| Js   | Wip    | -      |
+| Java | -      | -      |
 
 ### Protocol
 * Have a simple overhead (8 bytes for every event)
