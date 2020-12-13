@@ -3,14 +3,14 @@ using System.Net.Sockets;
 
 namespace SocketFlow
 {
-    public class SimpleProtocol : IProtocol
+    public class TcpProtocol : IProtocol
     {
         private const int ProtocolTypePosition = 0;
         private const int ProtocolLengthPosition = 4;
         private readonly TcpClient socket;
         private readonly NetworkStream stream;
 
-        public SimpleProtocol(TcpClient socket)
+        public TcpProtocol(TcpClient socket)
         {
             this.socket = socket;
             stream = socket.GetStream();

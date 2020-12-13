@@ -14,7 +14,7 @@ namespace SocketFlow.Client
         private readonly IDataWrapper<T> dataWrapper;
         private readonly Dictionary<int, Action<T>> handlers;
         private readonly int port;
-        private SimpleProtocol protocol;
+        private TcpProtocol protocol;
         private Thread thread;
 
         public event Action<Client<T>> Disconnected;
@@ -43,7 +43,7 @@ namespace SocketFlow.Client
         {
             clientSocket.Connect(address, port);
 
-            protocol = new SimpleProtocol(clientSocket);
+            protocol = new TcpProtocol(clientSocket);
 
             protocol.OnClose += Protocol_OnClose;
             protocol.OnData += Protocol_OnData;

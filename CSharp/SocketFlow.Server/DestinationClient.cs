@@ -1,22 +1,20 @@
 ﻿using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 
 namespace SocketFlow.Server
 {
     public class DestinationClient<T>
     {
-        private readonly SimpleProtocol protocol;
         private readonly Thread readerThread;
+        private readonly IProtocol protocol;
         private readonly SocketFlowServer<T> server;
-        private readonly TcpClient socket;
 
-        public DestinationClient(SocketFlowServer<T> server, TcpClient socket)
+        public DestinationClient(IProtocol protocol, SocketFlowServer<T> server, EndPoint endPoint)
         {
+            this.protocol = protocol;
             this.server = server;
-            this.socket = socket;
+            RemoteEndPoint = endPoint;
 
-            protocol = new SimpleProtocol(socket);
             protocol.OnClose += Protocol_OnClose;
             protocol.OnData += Protocol_OnData;
 
@@ -24,7 +22,7 @@ namespace SocketFlow.Server
             readerThread.Start();
         }
 
-        public EndPoint RemoteEndPoint => socket.Client.RemoteEndPoint;
+        public EndPoint RemoteEndPoint { get; }
 
         public void Disconnect()
         {
@@ -34,11 +32,6 @@ namespace SocketFlow.Server
         public void Send(int type, T value)
         {
             protocol.Send(type, server.DataWrapper.FormatObject(value));
-        }
-
-        public override string ToString()
-        {
-            return socket.Client.RemoteEndPoint.ToString();
         }
 
         private void Protocol_OnData(int type, byte[] data)

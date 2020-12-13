@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
 using SocketFlow.DataWrappers;
 using SocketFlow.Server.Modules;
 
@@ -10,14 +9,11 @@ namespace SocketFlow.Server
     public class SocketFlowServer<T>
     {
         public readonly IDataWrapper<T> DataWrapper;
-        private readonly TcpListener listener;
         private readonly Dictionary<int, Action<DestinationClient<T>, T>> handlers;
-        private readonly LinkedList<IModule> Modules = new LinkedList<IModule>();
-        private bool working = false;
+        private readonly LinkedList<IModule<T>> modules = new LinkedList<IModule<T>>();
 
-        public SocketFlowServer(IPAddress address, int port, IDataWrapper<T> dataWrapper)
+        public SocketFlowServer(IDataWrapper<T> dataWrapper)
         {
-            listener = new TcpListener(address, port);
             DataWrapper = dataWrapper;
             handlers = new Dictionary<int, Action<DestinationClient<T>, T>>();
         }
@@ -30,25 +26,23 @@ namespace SocketFlow.Server
             handlers.Add(type, handler);
         }
 
-        public SocketFlowServer<T> Using(IModule module)
+        public SocketFlowServer<T> Using(IModule<T> module)
         {
-            module.Initialize(this);
-            Modules.AddLast(module);
+            modules.AddLast(module);
             return this;
         }
 
-        public SocketFlowServer<T> Start(int backlog)
+        public SocketFlowServer<T> Start()
         {
-            listener.Start(backlog);
-            working = true;
-            AcceptHandler();
+            foreach (var module in modules)
+                module.Initialize(this);
             return this;
         }
 
         public SocketFlowServer<T> Stop()
         {
-            working = false;
-            listener.Stop();
+            foreach (var module in modules)
+                module.Finalize(this);
             return this;
         }
 
@@ -57,20 +51,15 @@ namespace SocketFlow.Server
             ClientDisconnected?.Invoke(client);
         }
 
+        internal void ConnectMe(DestinationClient<T> client)
+        {
+            ClientConnected?.Invoke(client);
+        }
+
         internal void ReceivedData(DestinationClient<T> client, int type, byte[] data)
         {
             var obj = DataWrapper.FormatRaw(data);
             handlers[type](client, obj);
-        }
-
-        private async void AcceptHandler()
-        {
-            while (working)
-            {
-                var client = await listener.AcceptTcpClientAsync();
-                var destClient = new DestinationClient<T>(this, client);
-                ClientConnected?.Invoke(destClient);
-            }
         }
     }
 }

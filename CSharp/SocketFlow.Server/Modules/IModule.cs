@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SocketFlow.Server.Modules
+﻿namespace SocketFlow.Server.Modules
 {
-    public interface IModule
+    public interface IModule<T>
     {
-        void Initialize<T>(SocketFlowServer<T> server);
+        void Initialize(SocketFlowServer<T> server);
+        void Finalize(SocketFlowServer<T> server);
     }
 }
