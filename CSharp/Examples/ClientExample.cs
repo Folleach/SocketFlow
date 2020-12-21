@@ -8,12 +8,15 @@ namespace Examples
 {
     public class ClientExample
     {
-        private static Client<string> client;
+        private static Client client;
 
         public static void Start(int port)
         {
-            client = new Client<string>(IPAddress.Parse("127.0.0.1"), port, new Utf8DataWrapper());
-            client.Bind(1, Response);
+            Console.WriteLine("Press any key to connect");
+            Console.ReadKey();
+            client = new Client(IPAddress.Parse("127.0.0.1"), port)
+                .Using(new Utf8DataWrapper());
+            client.Bind<string>(1, Response);
             client.Connect();
             ReadAndSend();
             while (true)

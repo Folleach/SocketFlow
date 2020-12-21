@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Threading;
 using SocketFlow.DataWrappers;
 using SocketFlow.Server;
 using SocketFlow.Server.Modules;
@@ -24,6 +25,7 @@ namespace Examples
         private static void Server_ClientConnected(DestinationClient client)
         {
             Console.WriteLine($"Someone connected on {client.RemoteEndPoint}");
+            Thread.Sleep(1000);
             client.Send(1, "Hello!");
         }
 

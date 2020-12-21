@@ -2,41 +2,34 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using SocketFlow.DataWrappers;
 
 namespace SocketFlow.Client
 {
-    public class Client<T>
+    public class Client
     {
         private readonly IPAddress address;
         private readonly TcpClient clientSocket;
-        private readonly IDataWrapper<T> dataWrapper;
-        private readonly Dictionary<int, Action<T>> handlers;
+        private readonly Dictionary<int, WrapperInfo> dataWrappers;
+        private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
+        private readonly Dictionary<int, MethodInfo> handlers;
         private readonly int port;
         private TcpProtocol protocol;
         private Thread thread;
 
-        public event Action<Client<T>> Disconnected;
-        public event Action<Client<T>> Connected;
+        public event Action<Client> Disconnected;
+        public event Action<Client> Connected;
 
-        public Client(IPAddress address, int port, IDataWrapper<T> dataWrapper)
+        public Client(IPAddress address, int port)
         {
             this.address = address;
             this.port = port;
-            this.dataWrapper = dataWrapper;
-            handlers = new Dictionary<int, Action<T>>();
+            dataWrappers = new Dictionary<int, WrapperInfo>();
+            wrapperTypes = new Dictionary<Type, WrapperInfo>();
+            handlers = new Dictionary<int, MethodInfo>();
             clientSocket = new TcpClient();
-        }
-
-        private void Protocol_OnData(int type, byte[] data)
-        {
-            handlers[type].Invoke(dataWrapper.FormatRaw(data));
-        }
-
-        private void Protocol_OnClose()
-        {
-            Disconnect();
         }
 
         public void Connect()
@@ -63,14 +56,42 @@ namespace SocketFlow.Client
             Disconnected?.Invoke(this);
         }
 
-        public void Bind(int type, Action<T> handler)
+        public Client Using<T>(IDataWrapper<T> wrapper)
         {
-            handlers.Add(type, handler);
+            if (wrapperTypes.ContainsKey(typeof(T)))
+                throw new Exception("Already registered");
+            var type = typeof(T);
+            var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
+            wrapperTypes.Add(type, wrapperInfo);
+            return this;
         }
 
-        public void Send(int type, T value)
+        public void Bind<T>(int scId, Action<T> handler)
         {
-            protocol.Send(type, dataWrapper.FormatObject(value));
+            if (!wrapperTypes.ContainsKey(typeof(T)))
+                throw new Exception($"WrapperInfo for '{typeof(T)}' doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+            dataWrappers.Add(scId, wrapperTypes[typeof(T)]);
+            handlers.Add(scId, handler.GetMethodInfo());
+        }
+
+        public void Send<T>(int type, T value)
+        {
+            protocol.Send(type, wrapperTypes[typeof(T)].DataWrapper.FormatObject(value));
+        }
+
+        private void Protocol_OnData(int scId, byte[] data)
+        {
+            if (!handlers.TryGetValue(scId, out var handler))
+                throw new Exception($"The server send event with {scId} id, but client can't handle it");
+            handlers[scId].Invoke(this, new[]
+            {
+                dataWrappers[scId].DataWrapper.FormatRaw(data)
+            });
+        }
+
+        private void Protocol_OnClose()
+        {
+            Disconnect();
         }
     }
 }
