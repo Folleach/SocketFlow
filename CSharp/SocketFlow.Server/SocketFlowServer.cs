@@ -9,14 +9,14 @@ namespace SocketFlow.Server
     public class SocketFlowServer
     {
         internal readonly Dictionary<int, WrapperInfo> DataWrappers;
-        private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
+        internal readonly Dictionary<Type, WrapperInfo> WrapperTypes;
         private readonly Dictionary<int, MethodInfo> handlers;
         private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
 
         public SocketFlowServer()
         {
             DataWrappers = new Dictionary<int, WrapperInfo>();
-            wrapperTypes = new Dictionary<Type, WrapperInfo>();
+            WrapperTypes = new Dictionary<Type, WrapperInfo>();
             handlers = new Dictionary<int, MethodInfo>();
         }
 
@@ -25,9 +25,9 @@ namespace SocketFlow.Server
 
         public void Bind<T>(int csId, Action<DestinationClient, T> handler)
         {
-            if (!wrapperTypes.ContainsKey(typeof(T)))
+            if (!WrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception("WrapperInfo for ${typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            DataWrappers.Add(csId, wrapperTypes[typeof(T)]);
+            DataWrappers.Add(csId, WrapperTypes[typeof(T)]);
             handlers.Add(csId, handler.GetMethodInfo());
         }
 
@@ -40,11 +40,11 @@ namespace SocketFlow.Server
 
         public SocketFlowServer Using<T>(IDataWrapper<T> wrapper)
         {
-            if (wrapperTypes.ContainsKey(typeof(T)))
+            if (WrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception("Already registered");
             var type = typeof(T);
             var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
-            wrapperTypes.Add(type, wrapperInfo);
+            WrapperTypes.Add(type, wrapperInfo);
             return this;
         }
 

@@ -83,7 +83,7 @@ namespace SocketFlow.Client
         {
             if (!handlers.TryGetValue(scId, out var handler))
                 throw new Exception($"The server send event with {scId} id, but client can't handle it");
-            handlers[scId].Invoke(this, new[]
+            handler.Invoke(this, new[]
             {
                 dataWrappers[scId].DataWrapper.FormatRaw(data)
             });

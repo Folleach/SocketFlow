@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading;
 
 namespace SocketFlow.Server
@@ -32,9 +31,7 @@ namespace SocketFlow.Server
 
         public void Send<T>(int scId, T value)
         {
-            var wrapper = server.DataWrappers[scId];
-            if (wrapper.Type != typeof(T))
-                throw new Exception($"The handler for ${scId} server-client event id is ${wrapper.Type} but you tried to use ${typeof(T)}");
+            var wrapper = server.WrapperTypes[typeof(T)];
             protocol.Send(scId, wrapper.DataWrapper.FormatObject(value));
         }
 
