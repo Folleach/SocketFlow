@@ -7,9 +7,9 @@
             return data;
         }
 
-        public byte[] FormatObject(byte[] value)
+        public byte[] FormatObject(object value)
         {
-            return value;
+            return value as byte[];
         }
     }
 }

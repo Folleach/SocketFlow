@@ -1,15 +1,16 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading;
 
 namespace SocketFlow.Server
 {
-    public class DestinationClient<T>
+    public class DestinationClient
     {
         private readonly Thread readerThread;
         private readonly IProtocol protocol;
-        private readonly SocketFlowServer<T> server;
+        private readonly SocketFlowServer server;
 
-        public DestinationClient(IProtocol protocol, SocketFlowServer<T> server, EndPoint endPoint)
+        public DestinationClient(IProtocol protocol, SocketFlowServer server, EndPoint endPoint)
         {
             this.protocol = protocol;
             this.server = server;
@@ -29,9 +30,12 @@ namespace SocketFlow.Server
             server.DisconnectMe(this);
         }
 
-        public void Send(int type, T value)
+        public void Send<T>(int scId, T value)
         {
-            protocol.Send(type, server.DataWrapper.FormatObject(value));
+            var wrapper = server.DataWrappers[scId];
+            if (wrapper.Type != typeof(T))
+                throw new Exception($"The handler for ${scId} server-client event id is ${wrapper.Type} but you tried to use ${typeof(T)}");
+            protocol.Send(scId, wrapper.DataWrapper.FormatObject(value));
         }
 
         private void Protocol_OnData(int type, byte[] data)

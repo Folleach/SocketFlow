@@ -4,14 +4,14 @@ using System.Net.Sockets;
 
 namespace SocketFlow.Server.Modules
 {
-    public class TcpModule<T> : IModule<T>
+    public class TcpModule : IModule
     {
         private const int Backlog = 20;
         private readonly IPAddress address;
         private readonly int port;
         private readonly TcpListener listener;
+        private SocketFlowServer owner;
         private bool working = false;
-        private SocketFlowServer<T> currentServer;
 
         public TcpModule(IPAddress address, int port)
         {
@@ -20,17 +20,21 @@ namespace SocketFlow.Server.Modules
             listener = new TcpListener(address, port);
         }
 
-        public void Initialize(SocketFlowServer<T> server)
+        public void Initialize(SocketFlowServer server)
         {
-            if (working)
-                throw new Exception("This module already initialized");
-            currentServer = server;
+            if (owner != null)
+                throw new Exception("Module already initialized. Maybe you called the 'Initialize(SocketFlowServer)' method yourself?");
+            owner = server;
+        }
+
+        public void Start()
+        {
             listener.Start(Backlog);
             working = true;
             AcceptHandler();
         }
 
-        public void Finalize(SocketFlowServer<T> server)
+        public void Stop()
         {
             working = false;
             listener.Stop();
@@ -41,8 +45,8 @@ namespace SocketFlow.Server.Modules
             while (working)
             {
                 var client = await listener.AcceptTcpClientAsync();
-                var destinationClient = new DestinationClient<T>(new TcpProtocol(client), currentServer, client.Client.RemoteEndPoint);
-                currentServer.ConnectMe(destinationClient);;
+                var destinationClient = new DestinationClient(new TcpProtocol(client), owner, client.Client.RemoteEndPoint);
+                owner.ConnectMe(destinationClient);;
             }
         }
     }

@@ -1,13 +1,14 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using SocketFlow.Server.Protocols;
 
 namespace SocketFlow.Server.Modules
 {
-    public class WebSocketModule<T> : IModule<T>
+    public class WebSocketModule : IModule
     {
         private readonly string host;
+        private SocketFlowServer owner;
         private HttpListener listener;
-        private SocketFlowServer<T> currentServer;
         private bool working = false;
 
         public WebSocketModule(string host)
@@ -15,9 +16,15 @@ namespace SocketFlow.Server.Modules
             this.host = $"http://{host}/";
         }
 
-        public void Initialize(SocketFlowServer<T> server)
+        public void Initialize(SocketFlowServer server)
         {
-            currentServer = server;
+            if (owner != null)
+                throw new Exception("Module already initialized. Maybe you called the 'Initialize(SocketFlowServer)' method yourself?");
+            owner = server;
+        }
+
+        public void Start()
+        {
             listener = new HttpListener();
             listener.Prefixes.Add(host);
             listener.Start();
@@ -25,7 +32,7 @@ namespace SocketFlow.Server.Modules
             AcceptHandler();
         }
 
-        public void Finalize(SocketFlowServer<T> server)
+        public void Stop()
         {
             working = false;
             listener.Close();
@@ -42,7 +49,7 @@ namespace SocketFlow.Server.Modules
                     continue;
                 }
                 var socket = await context.AcceptWebSocketAsync(null);
-                currentServer.ConnectMe(new DestinationClient<T>(new WebSocketProtocol(socket.WebSocket), currentServer, context.Request.RemoteEndPoint));
+                owner.ConnectMe(new DestinationClient(new WebSocketProtocol(socket.WebSocket), owner, context.Request.RemoteEndPoint));
             }
         }
     }

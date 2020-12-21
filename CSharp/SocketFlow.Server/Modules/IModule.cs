@@ -1,8 +1,9 @@
 ﻿namespace SocketFlow.Server.Modules
 {
-    public interface IModule<T>
+    public interface IModule
     {
-        void Initialize(SocketFlowServer<T> server);
-        void Finalize(SocketFlowServer<T> server);
+        void Initialize(SocketFlowServer server);
+        void Start();
+        void Stop();
     }
 }

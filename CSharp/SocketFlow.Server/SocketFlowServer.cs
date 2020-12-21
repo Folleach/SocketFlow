@@ -1,65 +1,86 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Reflection;
 using SocketFlow.DataWrappers;
 using SocketFlow.Server.Modules;
 
 namespace SocketFlow.Server
 {
-    public class SocketFlowServer<T>
+    public class SocketFlowServer
     {
-        public readonly IDataWrapper<T> DataWrapper;
-        private readonly Dictionary<int, Action<DestinationClient<T>, T>> handlers;
-        private readonly LinkedList<IModule<T>> modules = new LinkedList<IModule<T>>();
+        internal readonly Dictionary<int, WrapperInfo> DataWrappers;
+        private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
+        private readonly Dictionary<int, MethodInfo> handlers;
+        private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
 
-        public SocketFlowServer(IDataWrapper<T> dataWrapper)
+        public SocketFlowServer()
         {
-            DataWrapper = dataWrapper;
-            handlers = new Dictionary<int, Action<DestinationClient<T>, T>>();
+            DataWrappers = new Dictionary<int, WrapperInfo>();
+            wrapperTypes = new Dictionary<Type, WrapperInfo>();
+            handlers = new Dictionary<int, MethodInfo>();
         }
 
-        public event Action<DestinationClient<T>> ClientConnected;
-        public event Action<DestinationClient<T>> ClientDisconnected;
+        public event Action<DestinationClient> ClientConnected;
+        public event Action<DestinationClient> ClientDisconnected;
 
-        public void Bind(int type, Action<DestinationClient<T>, T> handler)
+        public void Bind<T>(int csId, Action<DestinationClient, T> handler)
         {
-            handlers.Add(type, handler);
+            if (!wrapperTypes.ContainsKey(typeof(T)))
+                throw new Exception("WrapperInfo for ${typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+            DataWrappers.Add(csId, wrapperTypes[typeof(T)]);
+            handlers.Add(csId, handler.GetMethodInfo());
         }
 
-        public SocketFlowServer<T> Using(IModule<T> module)
+        public SocketFlowServer Using(IModule module)
         {
+            module.Initialize(this);
             modules.AddLast(module);
             return this;
         }
 
-        public SocketFlowServer<T> Start()
+        public SocketFlowServer Using<T>(IDataWrapper<T> wrapper)
         {
-            foreach (var module in modules)
-                module.Initialize(this);
+            if (wrapperTypes.ContainsKey(typeof(T)))
+                throw new Exception("Already registered");
+            var type = typeof(T);
+            var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
+            wrapperTypes.Add(type, wrapperInfo);
             return this;
         }
 
-        public SocketFlowServer<T> Stop()
+        public SocketFlowServer Start()
         {
             foreach (var module in modules)
-                module.Finalize(this);
+                module.Start();
             return this;
         }
 
-        internal void DisconnectMe(DestinationClient<T> client)
+        public SocketFlowServer Stop()
+        {
+            foreach (var module in modules)
+                module.Stop();
+            return this;
+        }
+
+        internal void DisconnectMe(DestinationClient client)
         {
             ClientDisconnected?.Invoke(client);
         }
 
-        internal void ConnectMe(DestinationClient<T> client)
+        internal void ConnectMe(DestinationClient client)
         {
             ClientConnected?.Invoke(client);
         }
 
-        internal void ReceivedData(DestinationClient<T> client, int type, byte[] data)
+        internal void ReceivedData(DestinationClient client, int csId, byte[] data)
         {
-            var obj = DataWrapper.FormatRaw(data);
-            handlers[type](client, obj);
+            var wrapper = DataWrappers[csId];
+            var handler = handlers[csId];
+            handler.Invoke(this, new[]
+            {
+                client,
+                wrapper.DataWrapper.FormatRaw(data)
+            });
         }
     }
 }

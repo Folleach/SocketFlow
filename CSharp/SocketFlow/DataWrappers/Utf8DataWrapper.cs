@@ -9,9 +9,9 @@ namespace SocketFlow.DataWrappers
             return Encoding.UTF8.GetString(data);
         }
 
-        public byte[] FormatObject(string value)
+        public byte[] FormatObject(object value)
         {
-            return Encoding.UTF8.GetBytes(value);
+            return Encoding.UTF8.GetBytes(value as string ?? string.Empty);
         }
     }
 }
