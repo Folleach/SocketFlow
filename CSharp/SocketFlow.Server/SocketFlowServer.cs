@@ -26,7 +26,7 @@ namespace SocketFlow.Server
         public void Bind<T>(int csId, Action<DestinationClient, T> handler)
         {
             if (!WrapperTypes.ContainsKey(typeof(T)))
-                throw new Exception("WrapperInfo for ${typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+                throw new Exception($"WrapperInfo for {typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
             DataWrappers.Add(csId, WrapperTypes[typeof(T)]);
             handlers.Add(csId, handler.GetMethodInfo());
         }

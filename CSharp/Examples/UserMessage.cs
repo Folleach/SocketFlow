@@ -1,12 +1,13 @@
-﻿using System;
+﻿using System.Text.Json.Serialization;
 
 namespace Examples
 {
-    [Serializable]
     public class UserMessage
     {
-        public string UserName;
-        public string Message;
+        [JsonPropertyName("name")]
+        public string UserName { get; set; }
+        [JsonPropertyName("message")]
+        public string Message { get; set; }
 
         public UserMessage(string user, string message)
         {

@@ -74,9 +74,9 @@ namespace SocketFlow.Client
             handlers.Add(scId, handler.GetMethodInfo());
         }
 
-        public void Send<T>(int type, T value)
+        public void Send<T>(int csId, T value)
         {
-            protocol.Send(type, wrapperTypes[typeof(T)].DataWrapper.FormatObject(value));
+            protocol.Send(csId, wrapperTypes[typeof(T)].DataWrapper.FormatObject(value));
         }
 
         private void Protocol_OnData(int scId, byte[] data)
