@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading;
 using SocketFlow.DataWrappers;
 
@@ -14,7 +13,7 @@ namespace SocketFlow.Client
         private readonly TcpClient clientSocket;
         private readonly Dictionary<int, WrapperInfo> dataWrappers;
         private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
-        private readonly Dictionary<int, MethodInfo> handlers;
+        private readonly Dictionary<int, HandlerInfo> handlers;
         private readonly int port;
         private TcpProtocol protocol;
         private Thread thread;
@@ -28,7 +27,7 @@ namespace SocketFlow.Client
             this.port = port;
             dataWrappers = new Dictionary<int, WrapperInfo>();
             wrapperTypes = new Dictionary<Type, WrapperInfo>();
-            handlers = new Dictionary<int, MethodInfo>();
+            handlers = new Dictionary<int, HandlerInfo>();
             clientSocket = new TcpClient();
         }
 
@@ -73,7 +72,7 @@ namespace SocketFlow.Client
             if (!wrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception($"WrapperInfo for '{typeof(T)}' doesn't registered. Use 'Using<T>(IDataWrapper) for register");
             dataWrappers.Add(scId, wrapperTypes[typeof(T)]);
-            handlers.Add(scId, handler.GetMethodInfo());
+            handlers.Add(scId, new HandlerInfo(handler.Method, handler.Target));
         }
 
         public void Send<T>(int csId, T value)
@@ -87,7 +86,7 @@ namespace SocketFlow.Client
         {
             if (!handlers.TryGetValue(scId, out var handler))
                 throw new Exception($"The server send event with {scId} id, but client can't handle it");
-            handler.Invoke(this, new[]
+            handler.Method.Invoke(handler.Target, new[]
             {
                 dataWrappers[scId].DataWrapper.FormatRaw(data)
             });

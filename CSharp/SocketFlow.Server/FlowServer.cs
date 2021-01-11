@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using SocketFlow.DataWrappers;
 using SocketFlow.Server.Modules;
 
@@ -10,14 +9,14 @@ namespace SocketFlow.Server
     {
         internal readonly Dictionary<int, WrapperInfo> DataWrappers;
         internal readonly Dictionary<Type, WrapperInfo> WrapperTypes;
-        private readonly Dictionary<int, MethodInfo> handlers;
+        private readonly Dictionary<int, HandlerInfo> handlers;
         private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
 
         public FlowServer()
         {
             DataWrappers = new Dictionary<int, WrapperInfo>();
             WrapperTypes = new Dictionary<Type, WrapperInfo>();
-            handlers = new Dictionary<int, MethodInfo>();
+            handlers = new Dictionary<int, HandlerInfo>();
         }
 
         public event Action<DestinationClient> ClientConnected;
@@ -30,7 +29,7 @@ namespace SocketFlow.Server
             if (!WrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception($"WrapperInfo for {typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
             DataWrappers.Add(csId, WrapperTypes[typeof(T)]);
-            handlers.Add(csId, handler.GetMethodInfo());
+            handlers.Add(csId, new HandlerInfo(handler.Method, handler.Target));
         }
 
         public FlowServer Using(IModule module)
@@ -78,7 +77,7 @@ namespace SocketFlow.Server
         {
             var wrapper = DataWrappers[csId];
             var handler = handlers[csId];
-            handler.Invoke(this, new[]
+            handler.Method.Invoke(handler.Target, new[]
             {
                 client,
                 wrapper.DataWrapper.FormatRaw(data)
