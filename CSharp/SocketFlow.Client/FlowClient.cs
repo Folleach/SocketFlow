@@ -15,16 +15,18 @@ namespace SocketFlow.Client
         private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
         private readonly Dictionary<int, HandlerInfo> handlers;
         private readonly int port;
+        private readonly FlowOptions options;
         private TcpProtocol protocol;
         private Thread thread;
 
         public event Action<FlowClient> Disconnected;
         public event Action<FlowClient> Connected;
 
-        public FlowClient(IPAddress address, int port)
+        public FlowClient(IPAddress address, int port, FlowOptions options = null)
         {
             this.address = address;
             this.port = port;
+            this.options = options ?? new FlowOptions();
             dataWrappers = new Dictionary<int, WrapperInfo>();
             wrapperTypes = new Dictionary<Type, WrapperInfo>();
             handlers = new Dictionary<int, HandlerInfo>();
@@ -69,9 +71,15 @@ namespace SocketFlow.Client
         {
             if (scId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            if (!wrapperTypes.ContainsKey(typeof(T)))
-                throw new Exception($"WrapperInfo for '{typeof(T)}' doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            dataWrappers.Add(scId, wrapperTypes[typeof(T)]);
+            var type = typeof(T);
+            if (!wrapperTypes.ContainsKey(type))
+            {
+                if (options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
+                    Using(new JsonDataWrapper<T>());
+                else
+                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+            }
+            dataWrappers.Add(scId, wrapperTypes[type]);
             handlers.Add(scId, new HandlerInfo(handler.Method, handler.Target));
         }
 
@@ -79,7 +87,18 @@ namespace SocketFlow.Client
         {
             if (csId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            protocol.Send(csId, wrapperTypes[typeof(T)].DataWrapper.FormatObject(value));
+            var type = typeof(T);
+            if (!wrapperTypes.TryGetValue(type, out var wrapper))
+            {
+                if (options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
+                {
+                    Using(new JsonDataWrapper<T>());
+                    wrapper = wrapperTypes[type];
+                }
+                else
+                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+            }
+            protocol.Send(csId, wrapper.DataWrapper.FormatObject(value));
         }
 
         private void Protocol_OnData(int scId, byte[] data)

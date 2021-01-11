@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using SocketFlow.DataWrappers;
+using SocketFlow;
 using SocketFlow.Server;
 using SocketFlow.Server.Modules;
 
@@ -11,13 +11,16 @@ namespace Examples
     {
         private static readonly Dictionary<DestinationClient, string> clients = new Dictionary<DestinationClient, string>();
 
+        private static readonly FlowOptions options = new FlowOptions()
+        {
+            DefaultNonPrimitivesObjectUsingAsJson = true
+        };
+
         public static void Start(int port)
         {
-            var server = new FlowServer()
+            var server = new FlowServer(options)
                 .Using(new TcpModule(IPAddress.Any, port))
-                .Using(new WebSocketModule("127.0.0.1:3333"))
-                .Using(new JsonDataWrapper<UserInput>())
-                .Using(new JsonDataWrapper<UserMessage>());
+                .Using(new WebSocketModule("127.0.0.1:3333"));
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.Bind<UserInput>((int)CsEventId.SendName, NameReceive);

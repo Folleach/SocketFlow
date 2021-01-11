@@ -9,11 +9,13 @@ namespace SocketFlow.Server
     {
         internal readonly Dictionary<int, WrapperInfo> DataWrappers;
         internal readonly Dictionary<Type, WrapperInfo> WrapperTypes;
+        internal readonly FlowOptions Options;
         private readonly Dictionary<int, HandlerInfo> handlers;
         private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
 
-        public FlowServer()
+        public FlowServer(FlowOptions options = null)
         {
+            Options = options ?? new FlowOptions();
             DataWrappers = new Dictionary<int, WrapperInfo>();
             WrapperTypes = new Dictionary<Type, WrapperInfo>();
             handlers = new Dictionary<int, HandlerInfo>();
@@ -26,9 +28,15 @@ namespace SocketFlow.Server
         {
             if (csId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            if (!WrapperTypes.ContainsKey(typeof(T)))
-                throw new Exception($"WrapperInfo for {typeof(T)} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            DataWrappers.Add(csId, WrapperTypes[typeof(T)]);
+            var type = typeof(T);
+            if (!WrapperTypes.ContainsKey(type))
+            {
+                if (Options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
+                    Using(new JsonDataWrapper<T>());
+                else
+                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
+            }
+            DataWrappers.Add(csId, WrapperTypes[type]);
             handlers.Add(csId, new HandlerInfo(handler.Method, handler.Target));
         }
 

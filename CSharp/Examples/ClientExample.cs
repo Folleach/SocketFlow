@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
+using SocketFlow;
 using SocketFlow.Client;
-using SocketFlow.DataWrappers;
 
 namespace Examples
 {
@@ -9,13 +9,16 @@ namespace Examples
     {
         private static FlowClient client;
 
+        private static readonly FlowOptions options = new FlowOptions()
+        {
+            DefaultNonPrimitivesObjectUsingAsJson = true
+        };
+
         public static void Start(int port)
         {
             Console.WriteLine("Press any key to connect");
             Console.ReadKey();
-            client = new FlowClient(IPAddress.Parse("127.0.0.1"), port)
-                .Using(new JsonDataWrapper<UserInput>())
-                .Using(new JsonDataWrapper<UserMessage>());
+            client = new FlowClient(IPAddress.Parse("127.0.0.1"), port, options);
             client.Bind<UserMessage>((int)ScEventId.SendUserMessage, ReceiveMessage);
             client.Connect();
             SendMyName();
