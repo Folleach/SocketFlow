@@ -9,6 +9,10 @@ namespace Examples
         [JsonPropertyName("message")]
         public string Message { get; set; }
 
+        public UserMessage()
+        {
+        }
+
         public UserMessage(string user, string message)
         {
             UserName = user;

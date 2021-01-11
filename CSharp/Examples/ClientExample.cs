@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Text.Json;
 using SocketFlow.Client;
 using SocketFlow.DataWrappers;
 
@@ -8,17 +7,17 @@ namespace Examples
 {
     public class ClientExample
     {
-        private static FlowClient server;
+        private static FlowClient client;
 
         public static void Start(int port)
         {
             Console.WriteLine("Press any key to connect");
             Console.ReadKey();
-            server = new FlowClient(IPAddress.Parse("127.0.0.1"), port)
-                .Using(new JsonDynamicDataWrapper())
-                .Using(new Utf8DataWrapper());
-            server.Bind<JsonDocument>((int)ScEventId.SendUserMessage, ReceiveMessage);
-            server.Connect();
+            client = new FlowClient(IPAddress.Parse("127.0.0.1"), port)
+                .Using(new JsonDataWrapper<UserInput>())
+                .Using(new JsonDataWrapper<UserMessage>());
+            client.Bind<UserMessage>((int)ScEventId.SendUserMessage, ReceiveMessage);
+            client.Connect();
             SendMyName();
             ReadAndSend();
         }
@@ -26,17 +25,16 @@ namespace Examples
         private static void SendMyName()
         {
             var name = Console.ReadLine();
-            server.Send((int)CsEventId.SendName, $"{{\"name\":\"{name}\"}}");
+            client.Send((int)CsEventId.SendName, new UserInput(name));
         }
 
-        private static void ReceiveMessage(JsonDocument value)
+        private static void ReceiveMessage(UserMessage value)
         {
-            var json = value.RootElement;
             var t = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write($"{json.GetProperty("name").GetString()}");
+            Console.Write($"{value.UserName}");
             Console.ForegroundColor = t;
-            Console.WriteLine($": {json.GetProperty("message").GetString()}");
+            Console.WriteLine($": {value.Message}");
         }
 
         private static void ReadAndSend()
@@ -44,7 +42,7 @@ namespace Examples
             while (true)
             {
                 var message = Console.ReadLine();
-                server.Send((int)CsEventId.SendMessage, $"{{\"message\":\"{message}\"}}");
+                client.Send((int)CsEventId.SendMessage, new UserInput(message));
             }
         }
     }
