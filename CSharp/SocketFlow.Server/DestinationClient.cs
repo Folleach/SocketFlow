@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading;
 
 namespace SocketFlow.Server
@@ -31,6 +32,8 @@ namespace SocketFlow.Server
 
         public void Send<T>(int scId, T value)
         {
+            if (scId < 0)
+                throw new Exception("Negative ids are reserved for SocketFlow");
             var wrapper = server.WrapperTypes[typeof(T)];
             protocol.Send(scId, wrapper.DataWrapper.FormatObject(value));
         }

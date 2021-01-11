@@ -68,6 +68,8 @@ namespace SocketFlow.Client
 
         public void Bind<T>(int scId, Action<T> handler)
         {
+            if (scId < 0)
+                throw new Exception("Negative ids are reserved for SocketFlow");
             if (!wrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception($"WrapperInfo for '{typeof(T)}' doesn't registered. Use 'Using<T>(IDataWrapper) for register");
             dataWrappers.Add(scId, wrapperTypes[typeof(T)]);
@@ -76,6 +78,8 @@ namespace SocketFlow.Client
 
         public void Send<T>(int csId, T value)
         {
+            if (csId < 0)
+                throw new Exception("Negative ids are reserved for SocketFlow");
             protocol.Send(csId, wrapperTypes[typeof(T)].DataWrapper.FormatObject(value));
         }
 
