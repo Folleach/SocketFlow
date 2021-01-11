@@ -14,7 +14,7 @@ namespace SocketFlow.Tests
         public void SetUp()
         {
             server = new FlowServer()
-                .Using(new TcpModule(LocalAddress, Port1))
+                .UsingModule(new TcpModule(LocalAddress, Port1))
                 .Start();
         }
 

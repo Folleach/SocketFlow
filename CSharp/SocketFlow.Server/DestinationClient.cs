@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Threading;
-using SocketFlow.DataWrappers;
 
 namespace SocketFlow.Server
 {
@@ -35,17 +34,7 @@ namespace SocketFlow.Server
         {
             if (scId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            var type = typeof(T);
-            if (!server.WrapperTypes.TryGetValue(type, out var wrapper))
-            {
-                if (server.Options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
-                {
-                    server.Using(new JsonDataWrapper<T>());
-                    wrapper = server.WrapperTypes[type];
-                }
-                else
-                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            }
+            var wrapper = server.FlowBinder.GetWrapper<T>();
             protocol.Send(scId, wrapper.DataWrapper.FormatObject(value));
         }
 

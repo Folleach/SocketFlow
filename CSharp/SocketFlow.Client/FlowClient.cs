@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -11,11 +10,9 @@ namespace SocketFlow.Client
     {
         private readonly IPAddress address;
         private readonly TcpClient clientSocket;
-        private readonly Dictionary<int, WrapperInfo> dataWrappers;
-        private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
-        private readonly Dictionary<int, HandlerInfo> handlers;
         private readonly int port;
         private readonly FlowOptions options;
+        private readonly FlowBinder flowBinder;
         private TcpProtocol protocol;
         private Thread thread;
 
@@ -27,9 +24,7 @@ namespace SocketFlow.Client
             this.address = address;
             this.port = port;
             this.options = options ?? new FlowOptions();
-            dataWrappers = new Dictionary<int, WrapperInfo>();
-            wrapperTypes = new Dictionary<Type, WrapperInfo>();
-            handlers = new Dictionary<int, HandlerInfo>();
+            flowBinder = new FlowBinder(this.options);
             clientSocket = new TcpClient();
         }
 
@@ -57,57 +52,33 @@ namespace SocketFlow.Client
             Disconnected?.Invoke(this);
         }
 
-        public FlowClient Using<T>(IDataWrapper<T> wrapper)
+        public FlowClient UsingWrapper<T>(IDataWrapper<T> wrapper)
         {
-            if (wrapperTypes.ContainsKey(typeof(T)))
-                throw new Exception("Already registered");
-            var type = typeof(T);
-            var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
-            wrapperTypes.Add(type, wrapperInfo);
+            flowBinder.Using(wrapper);
             return this;
         }
 
-        public void Bind<T>(int scId, Action<T> handler)
+        public void Bind<T>(int serverClientId, Action<T> handler)
         {
-            if (scId < 0)
+            if (serverClientId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            var type = typeof(T);
-            if (!wrapperTypes.ContainsKey(type))
-            {
-                if (options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
-                    Using(new JsonDataWrapper<T>());
-                else
-                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            }
-            dataWrappers.Add(scId, wrapperTypes[type]);
-            handlers.Add(scId, new HandlerInfo(handler.Method, handler.Target));
+            flowBinder.Bind<T>(serverClientId, handler);
         }
 
         public void Send<T>(int csId, T value)
         {
             if (csId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            var type = typeof(T);
-            if (!wrapperTypes.TryGetValue(type, out var wrapper))
-            {
-                if (options.DefaultNonPrimitivesObjectUsingAsJson && !type.IsPrimitive)
-                {
-                    Using(new JsonDataWrapper<T>());
-                    wrapper = wrapperTypes[type];
-                }
-                else
-                    throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'Using<T>(IDataWrapper) for register");
-            }
+            var wrapper = flowBinder.GetWrapper<T>();
             protocol.Send(csId, wrapper.DataWrapper.FormatObject(value));
         }
 
-        private void Protocol_OnData(int scId, byte[] data)
+        private void Protocol_OnData(int serverClientId, byte[] data)
         {
-            if (!handlers.TryGetValue(scId, out var handler))
-                throw new Exception($"The server send event with {scId} id, but client can't handle it");
+            var handler = flowBinder.GetHandler(serverClientId);
             handler.Method.Invoke(handler.Target, new[]
             {
-                dataWrappers[scId].DataWrapper.FormatRaw(data)
+                flowBinder.GetWrapper(serverClientId).DataWrapper.FormatRaw(data)
             });
         }
 

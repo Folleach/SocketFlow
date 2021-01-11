@@ -19,8 +19,8 @@ namespace Examples
         public static void Start(int port)
         {
             var server = new FlowServer(options)
-                .Using(new TcpModule(IPAddress.Any, port))
-                .Using(new WebSocketModule("127.0.0.1:3333"));
+                .UsingModule(new TcpModule(IPAddress.Any, port))
+                .UsingModule(new WebSocketModule("127.0.0.1:3333"));
             server.ClientConnected += Server_ClientConnected;
             server.ClientDisconnected += Server_ClientDisconnected;
             server.Bind<UserInput>((int)CsEventId.SendName, NameReceive);
