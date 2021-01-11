@@ -8,9 +8,9 @@ namespace SocketFlow.Server
     {
         private readonly Thread readerThread;
         private readonly IProtocol protocol;
-        private readonly SocketFlowServer server;
+        private readonly FlowServer server;
 
-        public DestinationClient(IProtocol protocol, SocketFlowServer server, EndPoint endPoint)
+        public DestinationClient(IProtocol protocol, FlowServer server, EndPoint endPoint)
         {
             this.protocol = protocol;
             this.server = server;

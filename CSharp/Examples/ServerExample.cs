@@ -14,7 +14,7 @@ namespace Examples
 
         public static void Start(int port)
         {
-            var server = new SocketFlowServer()
+            var server = new FlowServer()
                 .Using(new TcpModule(IPAddress.Any, port))
                 .Using(new WebSocketModule("127.0.0.1:3333"))
                 .Using(new UserMessageDataWrapper())

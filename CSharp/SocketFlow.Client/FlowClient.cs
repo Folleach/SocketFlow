@@ -8,7 +8,7 @@ using SocketFlow.DataWrappers;
 
 namespace SocketFlow.Client
 {
-    public class Client
+    public class FlowClient
     {
         private readonly IPAddress address;
         private readonly TcpClient clientSocket;
@@ -19,10 +19,10 @@ namespace SocketFlow.Client
         private TcpProtocol protocol;
         private Thread thread;
 
-        public event Action<Client> Disconnected;
-        public event Action<Client> Connected;
+        public event Action<FlowClient> Disconnected;
+        public event Action<FlowClient> Connected;
 
-        public Client(IPAddress address, int port)
+        public FlowClient(IPAddress address, int port)
         {
             this.address = address;
             this.port = port;
@@ -56,7 +56,7 @@ namespace SocketFlow.Client
             Disconnected?.Invoke(this);
         }
 
-        public Client Using<T>(IDataWrapper<T> wrapper)
+        public FlowClient Using<T>(IDataWrapper<T> wrapper)
         {
             if (wrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception("Already registered");

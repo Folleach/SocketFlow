@@ -8,13 +8,13 @@ namespace Examples
 {
     public class ClientExample
     {
-        private static Client server;
+        private static FlowClient server;
 
         public static void Start(int port)
         {
             Console.WriteLine("Press any key to connect");
             Console.ReadKey();
-            server = new Client(IPAddress.Parse("127.0.0.1"), port)
+            server = new FlowClient(IPAddress.Parse("127.0.0.1"), port)
                 .Using(new JsonDynamicDataWrapper())
                 .Using(new Utf8DataWrapper());
             server.Bind<JsonDocument>((int)ScEventId.SendUserMessage, ReceiveMessage);

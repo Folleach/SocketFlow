@@ -2,7 +2,7 @@
 {
     public interface IModule
     {
-        void Initialize(SocketFlowServer server);
+        void Initialize(FlowServer server);
         void Start();
         void Stop();
     }

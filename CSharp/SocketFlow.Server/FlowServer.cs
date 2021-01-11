@@ -6,14 +6,14 @@ using SocketFlow.Server.Modules;
 
 namespace SocketFlow.Server
 {
-    public class SocketFlowServer
+    public class FlowServer
     {
         internal readonly Dictionary<int, WrapperInfo> DataWrappers;
         internal readonly Dictionary<Type, WrapperInfo> WrapperTypes;
         private readonly Dictionary<int, MethodInfo> handlers;
         private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
 
-        public SocketFlowServer()
+        public FlowServer()
         {
             DataWrappers = new Dictionary<int, WrapperInfo>();
             WrapperTypes = new Dictionary<Type, WrapperInfo>();
@@ -33,14 +33,14 @@ namespace SocketFlow.Server
             handlers.Add(csId, handler.GetMethodInfo());
         }
 
-        public SocketFlowServer Using(IModule module)
+        public FlowServer Using(IModule module)
         {
             module.Initialize(this);
             modules.AddLast(module);
             return this;
         }
 
-        public SocketFlowServer Using<T>(IDataWrapper<T> wrapper)
+        public FlowServer Using<T>(IDataWrapper<T> wrapper)
         {
             if (WrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception("Already registered");
@@ -50,14 +50,14 @@ namespace SocketFlow.Server
             return this;
         }
 
-        public SocketFlowServer Start()
+        public FlowServer Start()
         {
             foreach (var module in modules)
                 module.Start();
             return this;
         }
 
-        public SocketFlowServer Stop()
+        public FlowServer Stop()
         {
             foreach (var module in modules)
                 module.Stop();

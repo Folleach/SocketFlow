@@ -10,7 +10,7 @@ namespace SocketFlow.Server.Modules
         private readonly IPAddress address;
         private readonly int port;
         private readonly TcpListener listener;
-        private SocketFlowServer owner;
+        private FlowServer owner;
         private bool working = false;
 
         public TcpModule(IPAddress address, int port)
@@ -20,10 +20,10 @@ namespace SocketFlow.Server.Modules
             listener = new TcpListener(address, port);
         }
 
-        public void Initialize(SocketFlowServer server)
+        public void Initialize(FlowServer server)
         {
             if (owner != null)
-                throw new Exception("Module already initialized. Maybe you called the 'Initialize(SocketFlowServer)' method yourself?");
+                throw new Exception("Module already initialized. Maybe you called the 'Initialize(FlowServer)' method yourself?");
             owner = server;
         }
 
