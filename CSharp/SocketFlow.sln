@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketFlow.Server", "Socket
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SocketFlow.Client", "SocketFlow.Client\SocketFlow.Client.csproj", "{B891EC11-7B2C-465A-B906-3EF76DF331F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketFlow.Tests", "SocketFlow.Tests\SocketFlow.Tests.csproj", "{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,12 @@ Global
 		{B891EC11-7B2C-465A-B906-3EF76DF331F2}.DebugClient|Any CPU.Build.0 = DebugClient|Any CPU
 		{B891EC11-7B2C-465A-B906-3EF76DF331F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B891EC11-7B2C-465A-B906-3EF76DF331F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.DebugClient|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.DebugClient|Any CPU.Build.0 = Debug|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5D143C7-C52C-4C05-8A07-9CEC9CCE8DD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
