@@ -7,16 +7,12 @@ namespace SocketFlow.Server.Modules
     public class TcpModule : IModule
     {
         private const int Backlog = 20;
-        private readonly IPAddress address;
-        private readonly int port;
         private readonly TcpListener listener;
         private FlowServer owner;
         private bool working = false;
 
         public TcpModule(IPAddress address, int port)
         {
-            this.address = address;
-            this.port = port;
             listener = new TcpListener(address, port);
         }
 
@@ -42,11 +38,19 @@ namespace SocketFlow.Server.Modules
 
         private async void AcceptHandler()
         {
-            while (working)
+            try
             {
-                var client = await listener.AcceptTcpClientAsync();
-                var destinationClient = new DestinationClient(new TcpProtocol(client), owner, client.Client.RemoteEndPoint);
-                owner.ConnectMe(destinationClient);
+                while (working)
+                {
+                    var client = await listener.AcceptTcpClientAsync();
+                    var destinationClient = new DestinationClient(new TcpProtocol(client), owner, client.Client.RemoteEndPoint);
+                    owner.ConnectMe(destinationClient);
+                }
+            }
+            catch (ObjectDisposedException exception)
+            {
+                if (working)
+                    throw;
             }
         }
     }
