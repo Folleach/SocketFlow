@@ -4,10 +4,12 @@ namespace SocketFlow.DataWrappers
 {
     public class JsonDataWrapper<T> : IDataWrapper<T>
     {
-        private readonly JsonSerializerOptions options = new JsonSerializerOptions()
+        private readonly JsonSerializerOptions options;
+
+        public JsonDataWrapper(JsonSerializerOptions options = null)
         {
-            PropertyNameCaseInsensitive = true
-        };
+            this.options = options ?? new JsonSerializerOptions();
+        }
 
         public T FormatRaw(byte[] data)
         {
