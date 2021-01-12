@@ -1,9 +1,11 @@
 ﻿using System.Threading;
+using FluentAssertions;
 using NUnit.Framework;
 using SocketFlow.Client;
 using SocketFlow.DataWrappers;
 using SocketFlow.Server;
 using SocketFlow.Server.Modules;
+using SocketFlow.Tests.TestingObjects;
 using static SocketFlow.Tests.Config;
 
 namespace SocketFlow.Tests
@@ -69,6 +71,27 @@ namespace SocketFlow.Tests
             Thread.Sleep(MillisecondsToWaitForTransfer);
 
             Assert.AreEqual(message, receivedMessage);
+        }
+
+        [Test]
+        public void Server_ShouldBeAcceptJsonDataFromClient()
+        {
+            var wrapper = new JsonDataWrapper<Planet>();
+            server.UsingWrapper(wrapper);
+            client.UsingWrapper(wrapper);
+            
+            var obj = new Planet() { Name = "Earth", Radius = 6378.1, Creatures = 349653671 };
+            Planet receivedObject = null;
+
+            server.Bind<Planet>(1, (c, value) =>
+            {
+                receivedObject = value;
+            });
+
+            client.Send(1, obj);
+
+            Thread.Sleep(MillisecondsToWaitForTransfer * 10);
+            receivedObject.Should().BeEquivalentTo(obj);
         }
     }
 }
