@@ -38,8 +38,8 @@ namespace SocketFlow
                 else
                     throw new Exception($"WrapperInfo for {type} doesn't registered. Use 'UsingType<T>(IDataWrapper) for register");
             }
-            dataWrappers.Add(id, wrapperTypes[type]);
-            handlers.Add(id, new HandlerInfo(handler.Method, handler.Target));
+            dataWrappers[id] = wrapperTypes[type];
+            handlers[id] = new HandlerInfo(handler.Method, handler.Target);
         }
 
         public WrapperInfo GetWrapper<T>()
