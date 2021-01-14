@@ -87,7 +87,7 @@ namespace SocketFlow.Tests
 
             var diff = memoryAfter / (double)memoryBefore;
 
-            diff.Should().BeInRange(0, 1.1);
+            diff.Should().BeInRange(0, 1.5);
         }
 
         [Test]
