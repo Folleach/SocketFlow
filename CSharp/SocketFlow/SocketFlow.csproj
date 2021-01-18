@@ -2,6 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>SocketFlow</Title>
+    <Authors>Folleach</Authors>
+    <Description>Common library for SocketFlow</Description>
+    <RepositoryUrl>https://github.com/Folleach/SocketFlow</RepositoryUrl>
+    <NeutralLanguage />
+    <Version>0.1.0</Version>
+    <PackageProjectUrl>https://github.com/Folleach/SocketFlow</PackageProjectUrl>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>network, socket, flow</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
