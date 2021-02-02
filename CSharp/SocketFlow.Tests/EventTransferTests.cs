@@ -38,6 +38,25 @@ namespace SocketFlow.Tests
         private FlowClient client;
 
         [Test]
+        public void Server_BroadcastShouldBeSendValueToAllClients()
+        {
+            var testString = "Hear me?";
+            var additionalClient = new FlowClient(LocalAddress, Port1, LazyOptions)
+                .UsingWrapper(new Utf8DataWrapper());
+            additionalClient.Connect();
+            string client1response = null, client2response = null;
+            client.Bind<string>(1, x => client1response = x);
+            additionalClient.Bind<string>(1, x => client2response = x);
+
+            server.Broadcast(1, testString);
+
+            Thread.Sleep(MillisecondsToWaitForTransfer);
+
+            Assert.AreEqual(testString, client1response, "First client should be receive message");
+            Assert.AreEqual(testString, client2response, "Second client should be receive message");
+        }
+
+        [Test]
         public void Server_ShouldBeAcceptEventFromClient()
         {
             const string message = "Message which should be sent";

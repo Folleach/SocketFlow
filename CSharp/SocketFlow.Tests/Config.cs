@@ -8,5 +8,9 @@ namespace SocketFlow.Tests
         public static readonly int Port1 = 30000;
         public static readonly int Port2 = 30001;
         public static readonly int MillisecondsToWaitForTransfer = 10;
+        public static readonly FlowOptions LazyOptions = new FlowOptions()
+        {
+            DefaultNonPrimitivesObjectUsingAsJson = true
+        };
     }
 }

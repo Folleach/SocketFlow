@@ -30,12 +30,16 @@ namespace SocketFlow.Server
             server.DisconnectMe(this);
         }
 
-        public void Send<T>(int scId, T value)
+        public void Send<T>(int serverClientId, T value)
         {
-            if (scId < 0)
+            if (serverClientId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            var wrapper = server.FlowBinder.GetWrapper<T>();
-            protocol.Send(scId, wrapper.DataWrapper.FormatObject(value));
+            Send(serverClientId, server.GetData(value));
+        }
+
+        internal void Send(int serverClientId, byte[] data)
+        {
+            protocol.Send(serverClientId, data);
         }
 
         private void Protocol_OnData(int type, byte[] data)
