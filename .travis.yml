@@ -6,3 +6,11 @@ before_script:
   - dotnet restore ./CSharp/
 script:  
   - dotnet test ./CSharp/
+before_deploy:
+  - dotnet pack -c Release -o ./pack/ ./CSharp/SocketFlow.sln
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: dotnet nuget push ./pack/SocketFlow*.nupkg -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json
+  on:
+    branch: master
