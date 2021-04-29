@@ -3,6 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Configurations>Debug;Release;DebugClient</Configurations>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Title>SocketFlow.Server</Title>
+    <Version>0.1.0</Version>
+    <Authors>Folleach</Authors>
+    <Description>Server of event-oriented network library</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/Folleach/SocketFlow</RepositoryUrl>
+    <PackageTags>network, socket, flow, server</PackageTags>
+    <Product>SocketFlow</Product>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +21,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SocketFlow\SocketFlow.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
