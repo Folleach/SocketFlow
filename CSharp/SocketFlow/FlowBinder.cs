@@ -24,6 +24,8 @@ namespace SocketFlow
             if (wrapperTypes.ContainsKey(typeof(T)))
                 throw new Exception("Already registered");
             var type = typeof(T);
+            if (type.IsValueType)
+                throw new Exception("Value types are unsupported. Use classes and wrap base types. https://github.com/Folleach/SocketFlow/issues/4");
             var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
             wrapperTypes.Add(type, wrapperInfo);
         }
