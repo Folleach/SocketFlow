@@ -7,6 +7,7 @@ before_script:
 script:  
   - dotnet test ./CSharp/
 before_deploy:
+  - dotnet build -c Release ./CSharp/SocketFlow.sln
   - dotnet pack -c Release -o ./pack/ ./CSharp/SocketFlow.sln
 deploy:
   skip_cleanup: true
