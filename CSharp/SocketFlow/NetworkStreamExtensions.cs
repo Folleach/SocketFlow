@@ -6,14 +6,14 @@ namespace SocketFlow
 {
     public static class NetworkStreamExtensions
     {
-        public static bool ReadAll(this NetworkStream stream, byte[] buffer, int count)
+        public static async Task<bool> ReadAll(this NetworkStream stream, byte[] buffer, int count)
         {
             var read = 0;
             try
             {
                 while (read != count)
                 {
-                    var currentRead = stream.Read(buffer, read, count - read);
+                    var currentRead = await stream.ReadAsync(buffer, read, count - read);
                     if (currentRead == 0)
                         return false;
                     read += currentRead;

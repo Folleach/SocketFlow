@@ -16,12 +16,12 @@ namespace SocketFlow
             stream = socket.GetStream();
         }
 
-        public void Reader()
+        public async void Reader()
         {
             var headBuffer = new byte[8];
             while (socket.Connected)
             {
-                if (!stream.ReadAll(headBuffer, headBuffer.Length))
+                if (!await stream.ReadAll(headBuffer, headBuffer.Length))
                 {
                     OnClose?.Invoke();
                     return;
@@ -32,7 +32,7 @@ namespace SocketFlow
 
                 var bodyBuffer = new byte[length];
 
-                if (!stream.ReadAll(bodyBuffer, length))
+                if (!await stream.ReadAll(bodyBuffer, length))
                 {
                     OnClose?.Invoke();
                     return;

@@ -6,7 +6,6 @@ namespace SocketFlow.Server
 {
     public class DestinationClient
     {
-        private readonly Thread readerThread;
         private readonly IProtocol protocol;
         private readonly FlowServer server;
 
@@ -18,9 +17,7 @@ namespace SocketFlow.Server
 
             protocol.OnClose += Protocol_OnClose;
             protocol.OnData += Protocol_OnData;
-
-            readerThread = new Thread(protocol.Reader) {IsBackground = true};
-            readerThread.Start();
+            protocol.Reader();
         }
 
         public EndPoint RemoteEndPoint { get; }

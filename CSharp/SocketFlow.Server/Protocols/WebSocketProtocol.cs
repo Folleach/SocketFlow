@@ -15,7 +15,7 @@ namespace SocketFlow.Server.Protocols
             this.socket = socket;
         }
 
-        public void Reader()
+        public async void Reader()
         {
             var cancelToken = CancellationToken.None;
             var headBuffer = new byte[8];
@@ -23,7 +23,7 @@ namespace SocketFlow.Server.Protocols
 
             do
             {
-                var received = socket.ReceiveAsync(headSegment, cancelToken).Result;
+                var received = await socket.ReceiveAsync(headSegment, cancelToken);
                 if (received.CloseStatus.HasValue)
                 {
                     OnClose?.Invoke();
@@ -35,7 +35,7 @@ namespace SocketFlow.Server.Protocols
                 var bodyBuffer = new byte[length];
                 var bodySegment = new ArraySegment<byte>(bodyBuffer);
 
-                received = socket.ReceiveAsync(bodySegment, cancelToken).Result;
+                received = await socket.ReceiveAsync(bodySegment, cancelToken);
                 if (received.CloseStatus.HasValue)
                 {
                     OnClose?.Invoke();
@@ -45,7 +45,7 @@ namespace SocketFlow.Server.Protocols
             } while (!socket.CloseStatus.HasValue);
 
             OnClose?.Invoke();
-            socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, cancelToken);
+            await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, cancelToken);
         }
 
         public async void Send(int type, byte[] data)
