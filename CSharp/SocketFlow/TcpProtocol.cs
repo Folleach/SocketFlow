@@ -5,8 +5,8 @@ namespace SocketFlow
 {
     public class TcpProtocol : IProtocol
     {
-        private const int ProtocolTypePosition = 0;
-        private const int ProtocolLengthPosition = 4;
+        private const int ProtocolTypePosition = 4;
+        private const int ProtocolLengthPosition = 0;
         private readonly TcpClient socket;
         private readonly NetworkStream stream;
 
@@ -47,8 +47,8 @@ namespace SocketFlow
             var typeBytes = BitConverter.GetBytes(type);
             var lengthBytes = BitConverter.GetBytes(data.Length);
 
-            await stream.WriteAllAsync(typeBytes);
             await stream.WriteAllAsync(lengthBytes);
+            await stream.WriteAllAsync(typeBytes);
             await stream.WriteAllAsync(data);
         }
 

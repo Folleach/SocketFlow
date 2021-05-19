@@ -6,8 +6,8 @@ namespace SocketFlow.Server.Protocols
 {
     public class WebSocketProtocol : IProtocol
     {
-        private const int ProtocolTypePosition = 0;
-        private const int ProtocolLengthPosition = 4;
+        private const int ProtocolTypePosition = 4;
+        private const int ProtocolLengthPosition = 0;
         private readonly WebSocket socket;
 
         public WebSocketProtocol(WebSocket socket)
@@ -53,8 +53,8 @@ namespace SocketFlow.Server.Protocols
             var typeBytes = BitConverter.GetBytes(type);
             var lengthBytes = BitConverter.GetBytes(data.Length);
 
-            await socket.SendAsync(new ArraySegment<byte>(typeBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
             await socket.SendAsync(new ArraySegment<byte>(lengthBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
+            await socket.SendAsync(new ArraySegment<byte>(typeBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
             await socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
         }
 
