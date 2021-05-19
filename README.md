@@ -1,14 +1,14 @@
 # SocketFlow
 
-An event-oriented protocol over tcp  
+An event-oriented protocol over tcp/WebSocket  
 _Light_ and _simple_ for use
 
 #### Supported languages
 
 |      | client | server |
 |:-----|:------:|:------:|
-| C#   | +      | +      |
-| Js   | Wip    | -      |
+| C#   | [client](https://www.nuget.org/packages/SocketFlow.Client/) | [server](https://www.nuget.org/packages/SocketFlow.Server/) |
+| Js   | [client](https://www.npmjs.com/package/socketflow.client) | -      |
 | Java | -      | -      |
 
 ### Protocol
