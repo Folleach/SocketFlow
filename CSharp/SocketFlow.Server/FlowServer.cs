@@ -7,18 +7,19 @@ namespace SocketFlow.Server
 {
     public class FlowServer
     {
-        internal readonly FlowBinder FlowBinder;
-        internal readonly FlowOptions Options;
+        private readonly FlowBinder flowBinder;
+        private readonly FlowOptions options;
         private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
-        private readonly HashSet<DestinationClient> clients = new HashSet<DestinationClient>();
-
+        private readonly FlowGroup serverClients;
+        
         public FlowServer(FlowOptions options = null)
         {
-            Options = options ?? new FlowOptions();
-            FlowBinder = new FlowBinder(Options);
+            this.options = options ?? new FlowOptions();
+            flowBinder = new FlowBinder(this.options);
+            serverClients = new FlowGroup(this);
         }
 
-        public int ClientsCount => clients.Count;
+        public int ClientsCount => serverClients.Count;
 
         public event Action<DestinationClient> ClientConnected;
         public event Action<DestinationClient> ClientDisconnected;
@@ -27,7 +28,7 @@ namespace SocketFlow.Server
         {
             if (clientServerId < 0)
                 throw new Exception("Negative ids are reserved for SocketFlow");
-            FlowBinder.Bind<T>(clientServerId, handler);
+            flowBinder.Bind<T>(clientServerId, handler);
         }
 
         public FlowServer UsingModule(IModule module)
@@ -39,7 +40,7 @@ namespace SocketFlow.Server
 
         public FlowServer UsingWrapper<T>(IDataWrapper<T> wrapper)
         {
-            FlowBinder.Using(wrapper);
+            flowBinder.Using(wrapper);
             return this;
         }
 
@@ -59,35 +60,36 @@ namespace SocketFlow.Server
 
         public void Broadcast<T>(int serverClientId, T value)
         {
-            if (serverClientId < 0)
-                throw new Exception("Negative ids are reserved for SocketFlow");
-            var data = GetData(value);
-            foreach (var client in clients)
-                client.Send(serverClientId, data);
+            serverClients.Send(serverClientId, value);
+        }
+
+        public bool ContainsClient(DestinationClient client)
+        {
+            return serverClients.Contains(client);
         }
 
         internal void DisconnectMe(DestinationClient client)
         {
-            clients.Remove(client);
+            serverClients.Remove(client);
             ClientDisconnected?.Invoke(client);
         }
 
         internal void ConnectMe(DestinationClient client)
         {
-            clients.Add(client);
+            serverClients.UnsafeAdd(client);
             ClientConnected?.Invoke(client);
         }
 
         internal byte[] GetData<T>(T value)
         {
-            var wrapper = FlowBinder.GetWrapper<T>();
+            var wrapper = flowBinder.GetWrapper<T>();
             return wrapper.DataWrapper.FormatObject(value);
         }
 
         internal void ReceivedData(DestinationClient client, int clientServerId, byte[] data)
         {
-            var wrapper = FlowBinder.GetWrapper(clientServerId);
-            var handler = FlowBinder.GetHandler(clientServerId);
+            var wrapper = flowBinder.GetWrapper(clientServerId);
+            var handler = flowBinder.GetHandler(clientServerId);
             handler.Method.Invoke(handler.Target, new[]
             {
                 client,
