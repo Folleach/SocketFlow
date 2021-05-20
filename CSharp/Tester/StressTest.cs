@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,9 @@ namespace Tester
     public class StressTest : ITest
     {
         public string Name => nameof(StressTest);
+        
+        private static string[] Names = new [] {"Bytes", "KB", "MB", "GB"};
+
 
         public int ClientsCount { get; set; } = 20;
         public IPAddress IP { get; set; } = IPAddress.Parse("127.0.0.1");
@@ -47,6 +51,7 @@ namespace Tester
             while (work)
             {
                 server.Broadcast(1, data);
+                Thread.Yield();
             }
         }
 
@@ -64,15 +69,30 @@ namespace Tester
                     {
                         total += value;
                         Console.WriteLine($"Client{i++}: {value} bytes");
-                        //dataTransdered[key] = 0;
                     }
 
-                    Console.WriteLine($"Total: {total}");
+                    foreach (var key in dataTransdered.Keys.ToArray())
+                        dataTransdered[key] = 0;
+
+                    Console.WriteLine($"Total: {FormatBytesLength(total)}");
                 }
                 
 
                 Thread.Sleep(1000);
             }
+        }
+
+        private string FormatBytesLength(long sizeInBytes)
+        {
+            var b = sizeInBytes;
+            for (var i = 0; i < Names.Length; i++)
+            {
+                if (b < 1024)
+                    return $"{b} {Names[i]}";
+                b /= 1024;
+            }
+
+            return $"{b} {Names[^1]}";
         }
 
         private void Initialize()
