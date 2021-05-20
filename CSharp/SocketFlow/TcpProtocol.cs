@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace SocketFlow
@@ -9,6 +10,8 @@ namespace SocketFlow
         private const int ProtocolLengthPosition = 0;
         private readonly TcpClient socket;
         private readonly NetworkStream stream;
+        private readonly Queue<FlowPacket> packets = new Queue<FlowPacket>();
+        private bool Flushing = false;
 
         public TcpProtocol(TcpClient socket)
         {
@@ -42,14 +45,39 @@ namespace SocketFlow
             }
         }
 
-        public async void Send(int type, byte[] data)
+        public void Send(int type, byte[] data)
         {
-            var typeBytes = BitConverter.GetBytes(type);
-            var lengthBytes = BitConverter.GetBytes(data.Length);
+            var packet = new FlowPacket(type, data);
+            lock (packets)
+            {
+                packets.Enqueue(packet);
+                if (Flushing)
+                    return;
+                Flushing = true;
+                Flush();
+            }
+        }
 
-            await stream.WriteAllAsync(lengthBytes);
-            await stream.WriteAllAsync(typeBytes);
-            await stream.WriteAllAsync(data);
+        private async void Flush()
+        {
+            while (true)
+            {
+                FlowPacket packet;
+                lock (packets) 
+                    packet = packets.Dequeue();
+
+                await stream.WriteAllAsync(BitConverter.GetBytes(packet.Length));
+                await stream.WriteAllAsync(BitConverter.GetBytes(packet.Type));
+                await stream.WriteAllAsync(packet.PacketData);
+
+                lock (packets)
+                {
+                    if (packets.Count != 0)
+                        continue;
+                    Flushing = false;
+                    return;
+                }
+            }
         }
 
         public event Action OnClose;

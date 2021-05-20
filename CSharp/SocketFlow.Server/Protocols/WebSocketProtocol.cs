@@ -52,7 +52,7 @@ namespace SocketFlow.Server.Protocols
         {
             var typeBytes = BitConverter.GetBytes(type);
             var lengthBytes = BitConverter.GetBytes(data.Length);
-
+            
             await socket.SendAsync(new ArraySegment<byte>(lengthBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
             await socket.SendAsync(new ArraySegment<byte>(typeBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
             await socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
