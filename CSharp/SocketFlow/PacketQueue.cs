@@ -23,8 +23,8 @@ namespace SocketFlow
                 if (flushing)
                     return;
                 flushing = true;
-                Flush();
             }
+            Flush();
         }
         
         private async void Flush()
