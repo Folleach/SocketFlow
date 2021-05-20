@@ -9,10 +9,15 @@ namespace SocketFlow.Server.Protocols
         private const int ProtocolTypePosition = 4;
         private const int ProtocolLengthPosition = 0;
         private readonly WebSocket socket;
+        private readonly PacketQueue pinnedForSending;
 
         public WebSocketProtocol(WebSocket socket)
         {
             this.socket = socket;
+            pinnedForSending = new PacketQueue(async (data, end) => await socket.SendAsync(new ArraySegment<byte>(data),
+                WebSocketMessageType.Binary,
+                end,
+                CancellationToken.None));
         }
 
         public async void Reader()
@@ -48,14 +53,9 @@ namespace SocketFlow.Server.Protocols
             await socket.CloseAsync(socket.CloseStatus.Value, socket.CloseStatusDescription, cancelToken);
         }
 
-        public async void Send(int type, byte[] data)
+        public void Send(int type, byte[] data)
         {
-            var typeBytes = BitConverter.GetBytes(type);
-            var lengthBytes = BitConverter.GetBytes(data.Length);
-            
-            await socket.SendAsync(new ArraySegment<byte>(lengthBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
-            await socket.SendAsync(new ArraySegment<byte>(typeBytes), WebSocketMessageType.Binary, false, CancellationToken.None);
-            await socket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
+            pinnedForSending.Add(new FlowPacket(type, data));
         }
 
         public event Action OnClose;

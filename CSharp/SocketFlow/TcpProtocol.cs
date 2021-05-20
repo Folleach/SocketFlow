@@ -10,13 +10,13 @@ namespace SocketFlow
         private const int ProtocolLengthPosition = 0;
         private readonly TcpClient socket;
         private readonly NetworkStream stream;
-        private readonly Queue<FlowPacket> packets = new Queue<FlowPacket>();
-        private bool Flushing = false;
+        private readonly PacketQueue pinnedForSending;
 
         public TcpProtocol(TcpClient socket)
         {
             this.socket = socket;
             stream = socket.GetStream();
+            pinnedForSending = new PacketQueue(async (data, end) => await stream.WriteAllAsync(data));
         }
 
         public async void Reader()
@@ -47,37 +47,7 @@ namespace SocketFlow
 
         public void Send(int type, byte[] data)
         {
-            var packet = new FlowPacket(type, data);
-            lock (packets)
-            {
-                packets.Enqueue(packet);
-                if (Flushing)
-                    return;
-                Flushing = true;
-                Flush();
-            }
-        }
-
-        private async void Flush()
-        {
-            while (true)
-            {
-                FlowPacket packet;
-                lock (packets) 
-                    packet = packets.Dequeue();
-
-                await stream.WriteAllAsync(BitConverter.GetBytes(packet.Length));
-                await stream.WriteAllAsync(BitConverter.GetBytes(packet.Type));
-                await stream.WriteAllAsync(packet.PacketData);
-
-                lock (packets)
-                {
-                    if (packets.Count != 0)
-                        continue;
-                    Flushing = false;
-                    return;
-                }
-            }
+            pinnedForSending.Add(new FlowPacket(type, data));
         }
 
         public event Action OnClose;
