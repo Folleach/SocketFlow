@@ -8,7 +8,9 @@ namespace Tester
         {
             // Don't run if you wanna live
             // But if you are crazy - your computer will die
-            new StressTest().Run();
+            //new StressTest().Run();
+
+            new Profiling().Run();
         }
     }
 }
