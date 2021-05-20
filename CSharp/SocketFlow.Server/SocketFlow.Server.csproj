@@ -12,7 +12,7 @@
     <RepositoryUrl>https://github.com/Folleach/SocketFlow</RepositoryUrl>
     <PackageTags>network, socket, flow, server</PackageTags>
     <Product>SocketFlow</Product>
-    <PackageVersion>0.2.0</PackageVersion>
+    <PackageVersion>0.3.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
