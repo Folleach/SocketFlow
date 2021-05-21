@@ -20,7 +20,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./CSharp/
     - name: Build
-      run: dotnet build --no-restore ./CSharp/SocketFlow.sln
+      run: dotnet build -c Release ./CSharp/SocketFlow.sln
     - name: Test
       run: dotnet test --no-build --verbosity normal ./CSharp/SocketFlow.sln
     - name: Pack
