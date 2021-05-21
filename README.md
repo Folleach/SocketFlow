@@ -11,6 +11,40 @@ _Light_ and _simple_ for use
 | Js   | [client](https://www.npmjs.com/package/socketflow.client) | -      |
 | Java | -      | -      |
 
+### Getting started
+#### Server
+```cs
+var server = new FlowServer(FlowOptions.Lazy);            // Lazy - auto use unknown types as json
+server.UsingModule(new TcpModule(IPAddress.Any, 3333));   // To connect via TCP
+server.UsingModule(new WebSocketModule("0.0.0.0:3334"));  // To connect via WebSocket (From browser)
+server.UsingWrapper(new Utf8DataWrapper());               // To use String as value for transfer
+
+server.Bind<string>(1, (client, value) => {           // Bind handler for id 1.
+    Console.WriteLine($"User message: {value}");      // When client send message as string with id 1
+});                                                   // server print this message to console.
+
+server.ClientConnected += destinationClient => {      // Subscribe to client connect.
+    destinationClient.Send(1, "Hello! I'm server");   // When client was be connect, send message for him.
+};                                                    // Pay attention. Id from client to server and id from
+                                                      // server to client may be equals. It's not a problem.
+
+server.Start();
+```
+#### Client
+```cs
+var client = new FlowClient(IPAddress.Parse("127.0.0.1"), 3333, FlowOptions.Lazy); // C# client works only via TCP
+client.UsingWrapper(new Utf8DataWrapper());
+
+// When server sent message. Print message to console
+client.Bind<string>(1, value => {
+    Console.WriteLine($"Server say: {value}");
+});
+
+client.Connect();
+
+client.Send(1, "Hello server. I am connect to you to receive realtime values");
+```
+
 ### Protocol
 
 * Have a simple overhead (8 bytes for every event)
