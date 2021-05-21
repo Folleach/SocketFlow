@@ -23,3 +23,7 @@ jobs:
       run: dotnet build --no-restore ./CSharp/SocketFlow.sln
     - name: Test
       run: dotnet test --no-build --verbosity normal ./CSharp/SocketFlow.sln
+    - name: Pack
+      run: dotnet pack -c Release -o ./pack/ ./CSharp/SocketFlow.sln
+    - name: Push to NuGet
+      run: dotnet nuget push ./pack/SocketFlow*.nupkg -k ${{secrets.NUGET_API_KEY}} -s https://api.nuget.org/v3/index.json --skip-duplicate
