@@ -1,16 +1,12 @@
-name: .NET
+name: Publish
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  release:
+    types: [ created ]
 
 jobs:
-  build:
-
+  tests:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
@@ -23,6 +19,17 @@ jobs:
       run: dotnet build --no-restore ./CSharp/SocketFlow.sln
     - name: Test
       run: dotnet test --no-build --verbosity normal ./CSharp/SocketFlow.sln
+  publish:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+    - name: Restore dependencies
+      run: dotnet restore ./CSharp/
     - name: Release build
       run: dotnet build -c Release ./CSharp/SocketFlow.sln
     - name: Pack
