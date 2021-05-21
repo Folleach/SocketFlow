@@ -19,23 +19,23 @@ server.UsingModule(new TcpModule(IPAddress.Any, 3333));   // To connect via TCP
 server.UsingModule(new WebSocketModule("0.0.0.0:3334"));  // To connect via WebSocket (From browser)
 server.UsingWrapper(new Utf8DataWrapper());               // To use String as value for transfer
 
-server.Bind<string>(1, (client, value) => {           // Bind handler for id 1.
-    Console.WriteLine($"User message: {value}");      // When client send message as string with id 1
-});                                                   // server print this message to console.
+server.Bind<string>(1, (client, value) => {         // Bind handler for id 1.
+    Console.WriteLine($"User message: {value}");    // When client send message as string with id 1
+});                                                 // server print this message to console.
 
-server.ClientConnected += destinationClient => {      // Subscribe to client connect.
-    destinationClient.Send(1, "Hello! I'm server");   // When client was be connect, send message for him.
-};                                                    // Pay attention. Id from client to server and id from
-                                                      // server to client may be equals. It's not a problem.
+server.ClientConnected += destinationClient => {    // Subscribe to client connect.
+    destinationClient.Send(1, "Hello! I'm server"); // When client was be connect, send message for him.
+};                                                  // Pay attention. Id from client to server and id from
+                                                    // server to client may be equals. It's not a problem.
 
 server.Start();
 ```
 #### Client
+C# client works only via TCP
 ```cs
-var client = new FlowClient(IPAddress.Parse("127.0.0.1"), 3333, FlowOptions.Lazy); // C# client works only via TCP
+var client = new FlowClient(IPAddress.Parse("127.0.0.1"), 3333, FlowOptions.Lazy);
 client.UsingWrapper(new Utf8DataWrapper());
 
-// When server sent message. Print message to console
 client.Bind<string>(1, value => {
     Console.WriteLine($"Server say: {value}");
 });
