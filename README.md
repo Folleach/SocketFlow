@@ -1,6 +1,6 @@
 # SocketFlow
 
-An event-oriented protocol over tcp/WebSocket  
+An event-oriented protocol aggregator (tcp/WebSocket)  
 _Light_ and _simple_ for use
 
 #### Supported languages
