@@ -45,6 +45,7 @@ namespace SocketFlow.Server.Modules
                     var client = await listener.AcceptTcpClientAsync();
                     var destinationClient = new DestinationClient(new TcpProtocol(client), owner, client.Client.RemoteEndPoint);
                     owner.ConnectMe(destinationClient);
+                    destinationClient.Run();
                 }
             }
             catch (ObjectDisposedException exception)

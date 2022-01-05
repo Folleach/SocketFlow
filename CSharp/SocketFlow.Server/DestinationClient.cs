@@ -14,10 +14,6 @@ namespace SocketFlow.Server
             this.protocol = protocol;
             this.server = server;
             RemoteEndPoint = endPoint;
-
-            protocol.OnClose += Protocol_OnClose;
-            protocol.OnData += Protocol_OnData;
-            protocol.Reader();
         }
 
         public EndPoint RemoteEndPoint { get; }
@@ -34,6 +30,13 @@ namespace SocketFlow.Server
             Send(serverClientId, server.GetData(value));
         }
 
+        internal void Run()
+        {
+            protocol.OnClose += Protocol_OnClose;
+            protocol.OnData += Protocol_OnData;
+            protocol.Reader();
+        }
+        
         internal void Send(int serverClientId, byte[] data)
         {
             protocol.Send(serverClientId, data);
