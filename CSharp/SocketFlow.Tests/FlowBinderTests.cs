@@ -98,5 +98,31 @@ namespace SocketFlow.Tests
             Assert.Throws<Exception>(() => binder.GetHandler(1));
             Assert.Throws<Exception>(() => binder.Bind<Planet>(1, (Action)Console.WriteLine));
         }
+
+        [Test]
+        public void Using_ConcurrentUsing()
+        {
+            var runner = new ConcurrentRunner();
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy1>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy2>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy3>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy4>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy5>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy6>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy7>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy8>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy1>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy2>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy3>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy4>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy5>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy6>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy7>()));
+            runner.Case(() => binder.Using(new JsonDataWrapper<Dummy8>()));
+            runner.Run();
+            
+            foreach (var exception in runner.GetExceptions())
+                Assert.Fail(exception.Message);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using SocketFlow.DataWrappers;
 
@@ -8,14 +9,14 @@ namespace SocketFlow
     {
         private readonly FlowOptions options;
         private readonly Dictionary<int, WrapperInfo> dataWrappers;
-        private readonly Dictionary<Type, WrapperInfo> wrapperTypes;
+        private readonly ConcurrentDictionary<Type, WrapperInfo> wrapperTypes;
         private readonly Dictionary<int, HandlerInfo> handlers;
 
         public FlowBinder(FlowOptions options)
         {
             this.options = options;
             dataWrappers = new Dictionary<int, WrapperInfo>();
-            wrapperTypes = new Dictionary<Type, WrapperInfo>();
+            wrapperTypes = new ConcurrentDictionary<Type, WrapperInfo>();
             handlers = new Dictionary<int, HandlerInfo>();
         }
 
@@ -27,7 +28,7 @@ namespace SocketFlow
             if (type.IsValueType)
                 throw new Exception("Value types are unsupported. Use classes and wrap base types. https://github.com/Folleach/SocketFlow/issues/4");
             var wrapperInfo = new WrapperInfo(type, (IDataWrapper<object>)wrapper);
-            wrapperTypes.Add(type, wrapperInfo);
+            wrapperTypes.TryAdd(type, wrapperInfo);
         }
 
         public void Bind<T>(int id, Delegate handler)
