@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace SocketFlow
 {
@@ -16,32 +16,39 @@ namespace SocketFlow
         {
             this.socket = socket;
             stream = socket.GetStream();
-            pinnedForSending = new PacketQueue(async (data, end) => await stream.WriteAllAsync(data));
+            pinnedForSending = new PacketQueue(ProtocolSend);
         }
 
-        public async void Reader()
+        public async void StartListening()
         {
             var headBuffer = new byte[8];
-            while (socket.Connected)
+            try
             {
-                if (!await stream.ReadAll(headBuffer, headBuffer.Length))
+                while (socket.Connected)
                 {
-                    OnClose?.Invoke();
-                    return;
+                    if (!await stream.ReadAllAsync(headBuffer, headBuffer.Length))
+                    {
+                        OnClose?.Invoke();
+                        return;
+                    }
+
+                    var type = BitConverter.ToInt32(headBuffer, ProtocolTypePosition);
+                    var length = BitConverter.ToInt32(headBuffer, ProtocolLengthPosition);
+
+                    var bodyBuffer = new byte[length];
+
+                    if (!await stream.ReadAllAsync(bodyBuffer, length))
+                    {
+                        OnClose?.Invoke();
+                        return;
+                    }
+
+                    OnData?.Invoke(type, bodyBuffer);
                 }
-
-                var type = BitConverter.ToInt32(headBuffer, ProtocolTypePosition);
-                var length = BitConverter.ToInt32(headBuffer, ProtocolLengthPosition);
-
-                var bodyBuffer = new byte[length];
-
-                if (!await stream.ReadAll(bodyBuffer, length))
-                {
-                    OnClose?.Invoke();
-                    return;
-                }
-
-                OnData?.Invoke(type, bodyBuffer);
+            }
+            catch (Exception exception)
+            {
+                OnError?.Invoke(exception);
             }
         }
 
@@ -50,7 +57,27 @@ namespace SocketFlow
             pinnedForSending.Add(new FlowPacket(type, data));
         }
 
+        private async Task ProtocolSend(byte[] bytes, bool isEnd)
+        {
+            try
+            {
+                await stream.WriteAllAsync(bytes);
+            }
+            catch (Exception exception)
+            {
+                OnError?.Invoke(exception);
+            }
+        }
+
         public event Action OnClose;
+        public event Action<Exception> OnError;
         public event Action<int, byte[]> OnData;
+
+        public void Dispose()
+        {
+            socket.Close();
+            socket?.Dispose();
+            stream?.Dispose();
+        }
     }
 }

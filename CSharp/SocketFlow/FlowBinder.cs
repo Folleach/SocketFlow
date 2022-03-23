@@ -23,7 +23,7 @@ namespace SocketFlow
         public void Using<T>(IDataWrapper<T> wrapper)
         {
             if (wrapperTypes.ContainsKey(typeof(T)))
-                throw new Exception("Already registered");
+                return;
             var type = typeof(T);
             if (type.IsValueType)
                 throw new Exception("Value types are unsupported. Use classes and wrap base types. https://github.com/Folleach/SocketFlow/issues/4");

@@ -35,7 +35,7 @@ namespace SocketFlow.Client
             protocol.OnClose += Protocol_OnClose;
             protocol.OnData += Protocol_OnData;
 
-            protocol.Reader();
+            protocol.StartListening();
             Connected?.Invoke(this);
         }
 

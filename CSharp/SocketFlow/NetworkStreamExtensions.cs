@@ -1,12 +1,11 @@
-﻿using System;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace SocketFlow
 {
     public static class NetworkStreamExtensions
     {
-        public static async Task<bool> ReadAll(this NetworkStream stream, byte[] buffer, int count)
+        public static async Task<bool> ReadAllAsync(this NetworkStream stream, byte[] buffer, int count)
         {
             var read = 0;
             try
