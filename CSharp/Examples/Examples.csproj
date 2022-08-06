@@ -20,4 +20,8 @@
     <ProjectReference Include="..\SocketFlow.Server\SocketFlow.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Folleach.ConsoleUtils" Version="1.0.0" />
+  </ItemGroup>
+
 </Project>

@@ -1,33 +1,34 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
+using Folleach.ConsoleUtils;
 
 namespace Examples
 {
-    class Program
+    public static class Program
     {
         private const int Port = 8731;
 
-        static void Main(string[] args)
+        private static void Main(string[] rawArgs)
         {
-            if (args.Length == 0)
+            var args = new Args(rawArgs);
+            while (!args.Any())
             {
-#if CLIENT
-                ClientExample.Start(Port);
-#else
-                ServerExample.Start(Port);
-#endif
-            }
-            else
-            {
-                if (args[0] == "client")
-                    ClientExample.Start(Port);
-                else
-                    ServerExample.Start(Port);
+                Console.WriteLine("Type the args if you miss them");
+                Console.WriteLine(" -c, --client\tRun client");
+                Console.WriteLine(" -s, --server\tRun server");
+
+                args = new Args(Console.ReadLine()?.Split(' ') ?? throw new InvalidOperationException("Can't get the args"));
             }
 
-            while (true)
-            {
-                Console.ReadLine();
-            }
+            if (args.Contains("client") || args.Contains("c"))
+                ClientExample.Start(Port);
+            else if (args.Contains("server") || args.Contains("s"))
+                ServerExample.Start(Port);
+            else
+                return;
+
+            CancellationToken.None.WaitHandle.WaitOne();
         }
     }
 }
