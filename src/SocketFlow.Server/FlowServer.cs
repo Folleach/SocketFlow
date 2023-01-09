@@ -9,20 +9,20 @@ namespace SocketFlow.Server
     {
         private readonly FlowBinder flowBinder;
         private readonly FlowOptions options;
-        private readonly LinkedList<IModule> modules = new LinkedList<IModule>();
-        private readonly FlowGroup serverClients;
-        
+        private readonly List<IModule> modules = new List<IModule>();
+        private readonly FlowGroup clients;
+        private readonly EventPipe<DestinationClient> ConnectedPipe = new();
+        private readonly EventPipe<DestinationClient> DisconnectedPipe = new();
+
+        public IInOut Clients { get; }
+
         public FlowServer(FlowOptions options = null)
         {
             this.options = options ?? new FlowOptions();
             flowBinder = new FlowBinder(this.options);
-            serverClients = new FlowGroup(this);
+            clients = new FlowGroup(this);
+            Clients = new InOut(clients, ConnectedPipe, DisconnectedPipe);
         }
-
-        public int ClientsCount => serverClients.Count;
-
-        public event Action<DestinationClient> ClientConnected;
-        public event Action<DestinationClient> ClientDisconnected;
 
         public void Bind<T>(int clientServerId, Action<DestinationClient, T> handler)
         {
@@ -31,10 +31,9 @@ namespace SocketFlow.Server
             flowBinder.Bind<T>(clientServerId, handler);
         }
 
-        public FlowServer UsingModule(IModule module)
+        public FlowServer UseModule(IModule module)
         {
-            module.Initialize(this);
-            modules.AddLast(module);
+            modules.Add(module);
             return this;
         }
 
@@ -60,25 +59,16 @@ namespace SocketFlow.Server
 
         public void Broadcast<T>(int serverClientId, T value)
         {
-            serverClients.Send(serverClientId, value);
+            clients.Send(serverClientId, value);
         }
 
         public bool ContainsClient(DestinationClient client)
         {
-            return serverClients.Contains(client);
+            return clients.Contains(client);
         }
 
-        internal void DisconnectMe(DestinationClient client)
-        {
-            serverClients.Remove(client);
-            ClientDisconnected?.Invoke(client);
-        }
-
-        internal void ConnectMe(DestinationClient client)
-        {
-            serverClients.UnsafeAdd(client);
-            ClientConnected?.Invoke(client);
-        }
+        public IDisposable OnConnected(IObserver<DestinationClient> observer) => ConnectedPipe.Subscribe(observer);
+        public IDisposable OnDisconnected(IObserver<DestinationClient> observer) => DisconnectedPipe.Subscribe(observer);
 
         internal byte[] GetData<T>(T value)
         {

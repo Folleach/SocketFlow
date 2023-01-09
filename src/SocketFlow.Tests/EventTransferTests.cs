@@ -17,10 +17,10 @@ namespace SocketFlow.Tests
         public void SetUp()
         {
             server = new FlowServer()
-                .UsingModule(new TcpModule(LocalAddress, Port1))
+                .UseTcpModule(LocalAddress, Port1)
                 .UsingWrapper(new Utf8DataWrapper())
                 .Start();
-            server.ClientConnected += c => destinationClient = c;
+            server.OnConnected(c => destinationClient = c, out _);
             client = new FlowClient(LocalAddress, Port1)
                 .UsingWrapper(new Utf8DataWrapper());
             client.Connect();

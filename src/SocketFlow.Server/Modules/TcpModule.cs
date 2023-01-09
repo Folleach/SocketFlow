@@ -8,19 +8,13 @@ namespace SocketFlow.Server.Modules
     {
         private const int Backlog = 20;
         private readonly TcpListener listener;
-        private FlowServer owner;
+        private readonly FlowServer owner;
         private bool working = false;
 
-        public TcpModule(IPAddress address, int port)
+        public TcpModule(FlowServer server, IPAddress address, int port)
         {
+            owner = server ?? throw new ArgumentException("Can not be null", nameof(server));
             listener = new TcpListener(address, port);
-        }
-
-        public void Initialize(FlowServer server)
-        {
-            if (owner != null)
-                throw new Exception("Module already initialized. Maybe you called the 'Initialize(FlowServer)' method yourself?");
-            owner = server;
         }
 
         public void Start()
@@ -44,7 +38,7 @@ namespace SocketFlow.Server.Modules
                 {
                     var client = await listener.AcceptTcpClientAsync();
                     var destinationClient = new DestinationClient(new TcpProtocol(client), owner, client.Client.RemoteEndPoint);
-                    owner.ConnectMe(destinationClient);
+                    owner.Clients.Connect(destinationClient);
                     destinationClient.Run();
                 }
             }

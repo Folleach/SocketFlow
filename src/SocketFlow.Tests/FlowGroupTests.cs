@@ -24,7 +24,7 @@ namespace SocketFlow.Tests
         {
             // At some point, I stopped considering this setup easy
             server = new FlowServer(LazyOptions)
-                .UsingModule(new TcpModule(LocalAddress, Port1))
+                .UseTcpModule(LocalAddress, Port1)
                 .UsingWrapper(new Utf8DataWrapper())
                 .Start();
             
@@ -37,13 +37,13 @@ namespace SocketFlow.Tests
                     destinationClients[index] = client;
                     manualReset.Set();
                 }
-                server.ClientConnected += add;
+                server.OnConnected(add, out var subscription);
                 clients[index] = new FlowClient(LocalAddress, Port1)
                     .UsingWrapper(new Utf8DataWrapper());
                 clients[index].Connect();
                 manualReset.WaitOne();
                 manualReset.Reset();
-                server.ClientConnected -= add;
+                subscription.Dispose();
             }
         }
         
@@ -110,11 +110,11 @@ namespace SocketFlow.Tests
         public void Group_Add_ShouldNotAddClientFromOtherServer()
         {
             var additionalServer = new FlowServer()
-                .UsingModule(new TcpModule(LocalAddress, Port2))
+                .UseTcpModule(LocalAddress, Port2)
                 .Start();
 
             DestinationClient additionalClient = null;
-            additionalServer.ClientConnected += c => additionalClient = c;
+            additionalServer.OnConnected(c => additionalClient = c, out _);
 
             new FlowClient(LocalAddress, Port2).Connect();
 

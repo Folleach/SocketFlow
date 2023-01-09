@@ -21,7 +21,7 @@ namespace SocketFlow.Server
 
         public void Disconnect()
         {
-            server.DisconnectMe(this);
+            server.Clients.Disconnect(this);
             protocol.Dispose();
         }
 

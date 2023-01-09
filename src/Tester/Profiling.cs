@@ -50,7 +50,7 @@ namespace Tester
         private void Initialize()
         {
             server = new FlowServer(FlowOptions.Lazy)
-                .UsingModule(new TcpModule(IP, Port))
+                .UseModule(new TcpModule(IP, Port))
                 .UsingWrapper(new Utf8DataWrapper())
                 .Start();
 

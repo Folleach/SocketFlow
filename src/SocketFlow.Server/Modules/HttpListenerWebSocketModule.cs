@@ -1,26 +1,19 @@
 ﻿using System;
 using System.Net;
-using SocketFlow.Server.Protocols;
 
 namespace SocketFlow.Server.Modules
 {
-    public class WebSocketModule : IModule
+    public class HttpListenerWebSocketModule : IModule
     {
         private readonly string host;
-        private FlowServer owner;
+        private readonly FlowServer owner;
         private HttpListener listener;
         private bool working = false;
 
-        public WebSocketModule(string host)
+        public HttpListenerWebSocketModule(FlowServer server, string host)
         {
+            owner = server ?? throw new ArgumentException("Can not be null", nameof(server));
             this.host = $"http://{host}/";
-        }
-
-        public void Initialize(FlowServer server)
-        {
-            if (owner != null)
-                throw new Exception("Module already initialized. Maybe you called the 'Initialize(FlowServer)' method yourself?");
-            owner = server;
         }
 
         public void Start()
@@ -49,7 +42,7 @@ namespace SocketFlow.Server.Modules
                     continue;
                 }
                 var socket = await context.AcceptWebSocketAsync(null);
-                owner.ConnectMe(new DestinationClient(new WebSocketProtocol(socket.WebSocket), owner, context.Request.RemoteEndPoint));
+                owner.Clients.Connect(socket.WebSocket.ToFlowDestinationClient(owner, context.Request.RemoteEndPoint));
             }
         }
     }

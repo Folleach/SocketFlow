@@ -14,7 +14,7 @@ namespace SocketFlow.Tests
         public void SetUp()
         {
             server = new FlowServer()
-                .UsingModule(new TcpModule(LocalAddress, Port1))
+                .UseTcpModule(LocalAddress, Port1)
                 .Start();
         }
 
@@ -34,7 +34,7 @@ namespace SocketFlow.Tests
             client = new FlowClient(LocalAddress, Port1);
 
             var wasCalled = false;
-            server.ClientConnected += destinationClient => wasCalled = true;
+            server.OnConnected(_ => wasCalled = true);
 
             client.Connect();
 
