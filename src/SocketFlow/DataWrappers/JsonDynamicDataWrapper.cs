@@ -1,17 +1,17 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 
-namespace SocketFlow.DataWrappers
+namespace SocketFlow.DataWrappers;
+
+public class JsonDynamicDataWrapper : IDataWrapper<JsonDocument>
 {
-    public class JsonDynamicDataWrapper : IDataWrapper<JsonDocument>
+    public JsonDocument FormatRaw(ReadOnlyMemory<byte> data)
     {
-        public JsonDocument FormatRaw(byte[] data)
-        {
-            return JsonDocument.Parse(data);
-        }
+        return JsonDocument.Parse(data.ToArray());
+    }
 
-        public byte[] FormatObject(object value)
-        {
-            return JsonSerializer.SerializeToUtf8Bytes(value);
-        }
+    public ReadOnlyMemory<byte> FormatObject(object value)
+    {
+        return JsonSerializer.SerializeToUtf8Bytes(value);
     }
 }

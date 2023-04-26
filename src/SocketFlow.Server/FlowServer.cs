@@ -1,12 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using SocketFlow.DataWrappers;
-using SocketFlow.Server.Modules;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace SocketFlow.Server
 {
-    public class FlowServer
+    public class FlowServer<TKey, TClient> : ITransferUnit<TKey> where TClient : DestinationClientBase<TKey>
     {
+        private readonly IBaseEndpoint[] baseEndpoints;
+        private readonly FlowProtocolProcessor<TKey, TClient> processor;
+
+        public int ClientsCount => processor.Count;
+
+        public FlowServer(IBaseEndpoint[] baseEndpoints, FlowProtocolProcessor<TKey, TClient> processor)
+        {
+            this.baseEndpoints = baseEndpoints;
+            this.processor = processor;
+        }
+
+        public async Task RunAsync(CancellationToken token)
+        {
+            var tasks = new Task[baseEndpoints.Length];
+            for (var i = 0; i < tasks.Length; i++)
+                tasks[i] = baseEndpoints[i].Start(token);
+
+            await Task.WhenAll(tasks);
+        }
+
+        public FlowGroup<TKey, TClient> CreateGroup()
+        {
+            return new FlowGroup<TKey, TClient>();
+        }
+
+        public Task Send<TValue>(TKey key, TValue value)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    /*
         private readonly FlowBinder flowBinder;
         private readonly FlowOptions options;
         private readonly List<IModule> modules = new List<IModule>();
@@ -86,5 +116,5 @@ namespace SocketFlow.Server
                 wrapper.DataWrapper.FormatRaw(data)
             });
         }
-    }
+     */
 }

@@ -1,11 +1,32 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SocketFlow.Server
 {
-    public class FlowGroup : IEnumerable<DestinationClient>
+    public class FlowGroup<TKey, TClient> : ITransferUnit<TKey> where TClient : DestinationClientBase<TKey>
     {
+        public Task Send<TValue>(TKey key, TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryAdd(TClient client)
+        {
+            return false;
+        }
+
+        public bool TryRemove(TClient client)
+        {
+            return false;
+        }
+
+        public bool Contains(TClient client)
+        {
+            return false;
+        }
+    }
+
+    /*
         private readonly FlowServer server;
         private readonly HashSet<DestinationClient> clients = new HashSet<DestinationClient>();
 
@@ -65,5 +86,5 @@ namespace SocketFlow.Server
         {
             return clients.GetEnumerator();
         }
-    }
+     */
 }

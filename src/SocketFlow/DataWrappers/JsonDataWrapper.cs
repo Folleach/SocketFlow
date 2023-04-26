@@ -1,24 +1,24 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 
-namespace SocketFlow.DataWrappers
+namespace SocketFlow.DataWrappers;
+
+public class JsonDataWrapper<T> : IDataWrapper<T>
 {
-    public class JsonDataWrapper<T> : IDataWrapper<T>
+    private readonly JsonSerializerOptions options;
+
+    public JsonDataWrapper(JsonSerializerOptions options = null)
     {
-        private readonly JsonSerializerOptions options;
+        this.options = options ?? new JsonSerializerOptions();
+    }
 
-        public JsonDataWrapper(JsonSerializerOptions options = null)
-        {
-            this.options = options ?? new JsonSerializerOptions();
-        }
+    public T FormatRaw(ReadOnlyMemory<byte> data)
+    {
+        return JsonSerializer.Deserialize<T>(data.Span, options);
+    }
 
-        public T FormatRaw(byte[] data)
-        {
-            return JsonSerializer.Deserialize<T>(data, options);
-        }
-
-        public byte[] FormatObject(object value)
-        {
-            return JsonSerializer.SerializeToUtf8Bytes(value, options);
-        }
+    public ReadOnlyMemory<byte> FormatObject(object value)
+    {
+        return JsonSerializer.SerializeToUtf8Bytes(value, options);
     }
 }

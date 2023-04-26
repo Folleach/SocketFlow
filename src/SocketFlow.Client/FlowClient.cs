@@ -1,87 +1,48 @@
-﻿using System;
 using System.Net;
-using System.Net.Sockets;
-using SocketFlow.DataWrappers;
+using System.Threading;
+using System.Threading.Tasks;
+using SocketFlow.Tcp;
 
-namespace SocketFlow.Client
+namespace SocketFlow.Client;
+
+public class FlowClient<TKey> : DestinationClientBase<TKey>
 {
-    public class FlowClient
+    private readonly IPAddress address;
+    private readonly int port;
+    private EndpointProcessor<TKey, DestinationClientBase<TKey>> processor;
+    private bool shutdown;
+
+    public FlowClient(IFlowProtocol<TKey, IProtocolContext> protocol, IFlowBinder<DestinationClientBase<TKey>, TKey> binder, IPAddress address, int port)
     {
-        private readonly IPAddress address;
-        private readonly TcpClient clientSocket;
-        private readonly int port;
-        private readonly FlowOptions options;
-        private readonly FlowBinder flowBinder;
-        private TcpProtocol protocol;
+        Protocol = protocol;
+        Binder = binder;
+        this.address = address;
+        this.port = port;
+    }
 
-        public event Action<FlowClient> Disconnected;
-        public event Action<FlowClient> Connected;
+    public async Task ConnectAsync(CancellationToken token)
+    {
+        Endpoint = new TcpEndpoint(new IPEndPoint(address, port));
+        await Endpoint.StartAsync(token);
+        processor = new EndpointProcessor<TKey, DestinationClientBase<TKey>>(this, Binder, Protocol, SelfOnComplete);
+    }
 
-        public FlowClient(IPAddress address, int port, FlowOptions options = null)
-        {
-            this.address = address;
-            this.port = port;
-            this.options = options ?? new FlowOptions();
-            flowBinder = new FlowBinder(this.options);
-            clientSocket = new TcpClient();
-        }
+    public Task DisconnectAsync()
+    {
+        shutdown = true;
+        return OnComplete(processor);
+    }
 
-        public void Connect()
-        {
-            clientSocket.Connect(address, port);
+    private static Task OnComplete(EndpointProcessor<TKey, DestinationClientBase<TKey>> processor)
+    {
+        processor.CancellationToken.Cancel();
+        return processor.WhenObserver();
+    }
 
-            protocol = new TcpProtocol(clientSocket);
-
-            protocol.OnClose += Protocol_OnClose;
-            protocol.OnData += Protocol_OnData;
-
-            protocol.StartListening();
-            Connected?.Invoke(this);
-        }
-
-        public void Disconnect()
-        {
-            if (!clientSocket.Connected)
-                return;
-            clientSocket.GetStream().Dispose();
-            clientSocket.Close();
-            clientSocket.Dispose();
-            Disconnected?.Invoke(this);
-        }
-
-        public FlowClient UsingWrapper<T>(IDataWrapper<T> wrapper)
-        {
-            flowBinder.Using(wrapper);
-            return this;
-        }
-
-        public void Bind<T>(int serverClientId, Action<T> handler)
-        {
-            if (serverClientId < 0)
-                throw new Exception("Negative ids are reserved for SocketFlow");
-            flowBinder.Bind<T>(serverClientId, handler);
-        }
-
-        public void Send<T>(int csId, T value)
-        {
-            if (csId < 0)
-                throw new Exception("Negative ids are reserved for SocketFlow");
-            var wrapper = flowBinder.GetWrapper<T>();
-            protocol.Send(csId, wrapper.DataWrapper.FormatObject(value));
-        }
-
-        private void Protocol_OnData(int serverClientId, byte[] data)
-        {
-            var handler = flowBinder.GetHandler(serverClientId);
-            handler.Method.Invoke(handler.Target, new[]
-            {
-                flowBinder.GetWrapper(serverClientId).DataWrapper.FormatRaw(data)
-            });
-        }
-
-        private void Protocol_OnClose()
-        {
-            Disconnect();
-        }
+    private Task SelfOnComplete(EndpointProcessor<TKey, DestinationClientBase<TKey>> c)
+    {
+        if (shutdown)
+            return Task.CompletedTask;
+        return OnComplete(c);
     }
 }

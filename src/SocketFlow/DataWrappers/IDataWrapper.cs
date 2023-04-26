@@ -1,8 +1,9 @@
-﻿namespace SocketFlow.DataWrappers
+﻿using System;
+
+namespace SocketFlow.DataWrappers;
+
+public interface IDataWrapper<out T>
 {
-    public interface IDataWrapper<out T>
-    {
-        T FormatRaw(byte[] data);
-        byte[] FormatObject(object value);
-    }
+    T FormatRaw(ReadOnlyMemory<byte> data);
+    ReadOnlyMemory<byte> FormatObject(object value);
 }

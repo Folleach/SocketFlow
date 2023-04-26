@@ -11,7 +11,45 @@ _Light_ and _simple_ for use
 | Js   | [client](https://www.npmjs.com/package/socketflow.client) | -      |
 | Java | -      | -      |
 
-### Getting started
+## Getting started
+
+### Build server
+
+```cs
+
+```
+
+### Middlewares
+You can configure a middleware
+```cs
+
+```
+
+### Custom client context
+You can create custom client context.  
+Just inherit from `DestinationClientBase<YourKeyType>`
+```cs
+public class AlternativeDstClient : DestinationClientBase<string>
+{
+    public string Name { get; set; }
+}
+```
+And use it in `FlowServerBuilder`
+```cs
+var builder = new FlowServerBuilder<string, AlternativeDstClient>();
+```
+
+Then you can use `Name` property in every handler
+```cs
+builder.Map("/set-name", (AlternativeDstClient cleint, string key, string value) =>
+{
+    c.Name = value;
+    Console.WriteLine($"{c} told his name: '{value}'")
+    return Task.CompletedTask;
+});
+```
+
+
 #### Server
 ```cs
 var server = new FlowServer(FlowOptions.Lazy);            // Lazy - auto use unknown types as json

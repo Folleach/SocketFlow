@@ -17,6 +17,8 @@
     <PackageTags>network, socket, flow, client</PackageTags>
     <Product>SocketFlow</Product>
     <PackageVersion>0.3.0</PackageVersion>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
